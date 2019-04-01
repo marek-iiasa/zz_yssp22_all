@@ -23,9 +23,9 @@ and the ix modeling platform, please visit `MESSAGEix.iiasa.ac.at/`.
 
 When using the MESSAGEix framework, please cite as:
 
-    Daniel Huppmann, Matthew Gidden, Oliver Fricko, Peter Kolp, 
+    Daniel Huppmann, Matthew Gidden, Oliver Fricko, Peter Kolp,
     Clara Orthofer, Michael Pimmer, Adriano Vinca, Alessio Mastrucci, Keywan Riahi, and Volker Krey.
-    "The MESSAGEix Integrated Assessment Model and the ix modeling platform". 2018, submitted. 
+    "The MESSAGEix Integrated Assessment Model and the ix modeling platform". 2018, submitted.
     Electronic pre-print available at `pure.iiasa.ac.at/15157/`.
 
 Please review the NOTICE at `MESSAGEix.iiasa.ac.at/notice.html`
@@ -70,7 +70,7 @@ $INCLUDE MESSAGE/model_solve.gms
 *----------------------------------------------------------------------------------------------------------------------*
 * post-processing and export to gdx                                                                                    *
 *----------------------------------------------------------------------------------------------------------------------*
-
+$ONTEXT
 * calculation of commodity import costs by node, commodity and year
 import_cost(node2, commodity, year) =
           SUM( (node,tec,vintage,mode,level,time,time2)$( (NOT sameas(node,node2)) AND map_tec_act(node2,tec,year,mode,time2)
@@ -103,7 +103,7 @@ COST_NODAL_NET.L(location,year) =
         emission_scaling(type_emission,emission) * tax_emission(node,type_emission,type_tec,type_year)
         * EMISS.L(location,emission,type_tec,year) )
 ;
-
+$OFFTEXT
 * include MESSAGE reporting
 $INCLUDE MESSAGE/reporting.gms
 
