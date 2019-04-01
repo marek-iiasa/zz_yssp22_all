@@ -75,7 +75,8 @@ $INCLUDE MESSAGE/parameter_def.gms
 
 ** load data from gdx, run processing scripts of auxiliary parameters
 $INCLUDE MESSAGE/data_load.gms
-
+* BZ added for small changes during the development phase
+$INCLUDE input_editor.gms
 ** compute auxiliary parameters for capacity and investment cost accounting
 $INCLUDE MESSAGE/scaling_investment_costs.gms
 
