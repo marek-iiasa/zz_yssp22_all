@@ -282,6 +282,8 @@ Equations
     RELATION_EQUIVALENCE            auxiliary equation to simplify the implementation of relations
     RELATION_CONSTRAINT_UP          upper bound of relations (linear constraints)
     RELATION_CONSTRAINT_LO          lower bound of relations (linear constraints)
+* BZ added
+    INVESTMENT_CONSTRAINT_UP        upper bound of the investment (by year and type of technology)
 ;
 
 *----------------------------------------------------------------------------------------------------------------------*
@@ -1501,6 +1503,43 @@ RELATION_CONSTRAINT_LO(relation,node,year)$( is_relation_lower(relation,node,yea
 %SLACK_RELATION_BOUND_LO% + SLACK_RELATION_BOUND_LO(relation,node,year)
     =G= relation_lower(relation,node,year) ;
 
+***      BZ added
+* Equation INVESTMENT_CONSTRAINT_UP
+* """""""""""""""""""""""""""""""
+*   .. math::
+*
+***
+INVESTMENT_CONSTRAINT_UP(node,type_year,type_tec)$( investment_upper(node,type_year,type_tec) )..
+* resource extration costs
+    SUM((commodity,grade,year)$( map_resource(node,commodity,grade,year) AND cat_year(type_year,year) ),
+         resource_cost(node,commodity,grade,year) * EXT(node,commodity,grade,year) )
+* technology capacity investment cost
+    + SUM((tec,year)$( map_tec(node,tec,year) AND cat_year(type_year,year) AND cat_tec(type_tec,tec) ),
+            ( inv_cost(node,tec,year) * construction_time_factor(node,tec,year)
+                * end_of_horizon_factor(node,tec,year) * CAP_NEW(node,tec,year)))
+
+* additional cost terms (penalty) for relaxation of 'soft' dynamic new capacity constraints
+    + SUM((inv_tec,year)$( map_tec(node,inv_tec,year) AND cat_year(type_year,year) ),
+        SUM((mode,time)$map_tec_act(node,inv_tec,year,mode,time),
+            ( ( abs_cost_new_capacity_soft_up(node,inv_tec,year)
+                + level_cost_new_capacity_soft_up(node,inv_tec,year) * inv_cost(node,inv_tec,year)
+                ) * CAP_NEW_UP(node,inv_tec,year) )$( soft_new_capacity_up(node,inv_tec,year) )
+            + ( ( abs_cost_new_capacity_soft_lo(node,inv_tec,year)
+                + level_cost_new_capacity_soft_lo(node,inv_tec,year) * inv_cost(node,inv_tec,year)
+                ) * CAP_NEW_LO(node,inv_tec,year) )$( soft_new_capacity_lo(node,inv_tec,year) )
+            )
+        )
+* upper bound on investment (by type of year and type of technology)
+         =L= investment_upper(node,type_year,type_tec) ;
+
+*EMISSION_CONSTRAINT(node,type_emission,type_tec,type_year)$is_bound_emission(node,type_emission,type_tec,type_year)..
+*    SUM( (year_all2,emission)$( cat_year(type_year,year_all2) AND cat_emission(type_emission,emission) ),
+*        duration_period(year_all2) * emission_scaling(type_emission,emission) *
+*            ( EMISS(node,emission,type_tec,year_all2)$( year(year_all2) )
+*                + historical_emission(node,emission,type_tec,year_all2) )
+*      )
+*    / SUM(year_all2$( cat_year(type_year,year_all2) ), duration_period(year_all2) )
+*    =L= bound_emission(node,type_emission,type_tec,type_year) ;
 *----------------------------------------------------------------------------------------------------------------------*
 * model statements                                                                                                     *
 *----------------------------------------------------------------------------------------------------------------------*
@@ -1549,6 +1588,8 @@ Model MESSAGE_LP /
     RELATION_EQUIVALENCE
     RELATION_CONSTRAINT_UP
     RELATION_CONSTRAINT_LO
+* BZ added
+    INVESTMENT_CONSTRAINT_UP
 / ;
 
 MESSAGE_LP.holdfixed = 1 ;

@@ -627,3 +627,13 @@ Parameters
     ctr               counter parameter for loops
     status(*,*)       model solution status parameter for log writing
 ;
+
+*----------------------------------------------------------------------------------------------------------------------*
+* BZ added for the investment cap
+*    * - Parameter name
+*      - Index dimensions
+*    * - investment_upper
+*      - ``node`` | ``type_year``| ``type_tec``
+Parameters
+    investment_upper(node, type_year, type_tec)  upper bound on investment by node and (type of) year and type of technology
+;

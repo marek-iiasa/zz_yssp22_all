@@ -334,6 +334,8 @@ Sets
 
     is_relation_upper(relation,node,year_all)     flag whether upper bounds exists for generic relation
     is_relation_lower(relation,node,year_all)     flag whether lower bounds exists for generic relation
+* BZ added
+*    is_investment_upper(node,type_tec,year_all)     flag whether upper bounds exists for investment
 ;
 
 *----------------------------------------------------------------------------------------------------------------------*
