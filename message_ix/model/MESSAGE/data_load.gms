@@ -14,7 +14,9 @@ $LOAD lvl_spatial, lvl_temporal, map_spatial_hierarchy, map_temporal_hierarchy
 $LOAD map_node, map_time, map_commodity, map_resource, map_stocks, map_tec, map_tec_time, map_tec_mode
 $LOAD map_land, map_relation
 $LOAD type_tec, cat_tec, type_year, cat_year, type_emission, cat_emission, type_tec_land
-$LOAD inv_tec, renewable_tec
+$LOAD inv_tec, renewable_tec,
+* BZ added for storage
+$LOAD level_storage
 $GDXIN
 
 Execute_load '%in%'
@@ -63,6 +65,8 @@ is_fixed_extraction, is_fixed_stock, is_fixed_new_capacity, is_fixed_capacity, i
 fixed_extraction, fixed_stock, fixed_new_capacity, fixed_capacity, fixed_activity, fixed_land
 * BZ added
 investment_upper
+* BZ added for storage
+bound_storage_lo,time_seq
 ;
 
 *----------------------------------------------------------------------------------------------------------------------*
@@ -126,6 +130,18 @@ operation_factor(node,tec,year_all2,year_all)$( map_tec(node,tec,year_all)
 emission_scaling(type_emission,emission)$( cat_emission(type_emission,emission)
         and not emission_scaling(type_emission,emission) ) = 1 ;
 
+* BZ added for storage
+* mapping of storage technologies for charging to their commodities
+map_tec_chrg(node,tec,mode,commodity,year_all,time)$(
+    SUM((node2,year_all2,level_storage,time_act),
+        output(node2,tec,year_all,year_all2,mode,node,commodity,level_storage,time_act,time) ) ) = yes;
+storage_tec_chrg(tec)$(
+     SUM((node,mode,commodity,year_all,time), map_tec_chrg(node,tec,mode,commodity,year_all,time) ) ) = yes;
+
+* mapping of storage technologies for discharging to their commodities
+map_tec_dchrg(node,tec,mode,commodity,year_all,time)$(
+    SUM((node2,year_all2,level_storage,time_act),
+        input(node2,tec,year_all,year_all2,mode,node,commodity,level_storage,time_act,time) ) ) = yes;
 *----------------------------------------------------------------------------------------------------------------------*
 * sanity checks on the data set                                                                                        *
 *----------------------------------------------------------------------------------------------------------------------*

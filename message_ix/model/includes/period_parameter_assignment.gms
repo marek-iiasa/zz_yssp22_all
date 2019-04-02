@@ -13,6 +13,8 @@ Sets
     last_period(year_all)            flag for last period in model horizon
     macro_initial_period(year_all)   flag for period in model horizon in which to initialize model parameters in (period prior to first model period) - used in MACRO
     macro_base_period(year_all)      flag for base year period in model horizon (period prior to first model period) - used in MACRO
+* BZ added for storage
+    map_time_seq(time,time2)       mapping of one sub-annual timestep ('time') to the next ('time2')
 ;
 
 Parameter
@@ -40,6 +42,9 @@ if ( sum(year_all$( cat_year("initializeyear_macro",year_all) ), 1 ) > 1 ,
 * mapping of sequence of periods over the model horizon
 seq_period(year_all,year_all2)$( ORD(year_all) + 1 = ORD(year_all2) ) = yes ;
 map_period(year_all,year_all2)$( ORD(year_all) <= ORD(year_all2) ) = yes ;
+
+* BZ added for storage
+* mapping of sequence of time over a period
 
 * dynamic sets (singleton) with first and last periods in model horizon of MESSAGEix (for easier reference)
 first_period(year_all) = no ;

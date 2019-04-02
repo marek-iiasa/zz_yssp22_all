@@ -360,3 +360,11 @@ Sets
     is_fixed_activity(node,tec,vintage,year_all,mode,time) flag whether activity variable is fixed
     is_fixed_land(node,land_scenario,year_all)             flag whether land level is fixed
 ;
+
+* BZ added for storage
+Sets
+    level_storage(level)                                       levels of storage
+    map_tec_chrg(node,tec,mode,commodity,year_all,time)        mapping of charging technologies (for storage) to their commodities
+    storage_tec_chrg(tec)                                      charging technologies
+    map_tec_dchrg(node,tec,mode,commodity,year_all,time)        mapping of discharging technologies (for storage) to their commodities
+;

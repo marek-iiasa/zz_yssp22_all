@@ -637,3 +637,9 @@ Parameters
 Parameters
     investment_upper(node, type_year, type_tec)  upper bound on investment by node and (type of) year and type of technology
 ;
+
+* BZ added for storage
+Parameters
+    bound_storage_lo(node,commodity,level,year_all,time)                lower bound of storage section (percentage)
+    time_seq(time)                                                      sequence of subannual timesteps
+;
