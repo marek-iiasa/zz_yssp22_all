@@ -16,7 +16,7 @@ $LOAD map_land, map_relation
 $LOAD type_tec, cat_tec, type_year, cat_year, type_emission, cat_emission, type_tec_land
 $LOAD inv_tec, renewable_tec,
 * BZ added for storage
-$LOAD level_storage
+$LOAD storage_tec, map_tec_storage
 $GDXIN
 
 Execute_load '%in%'
@@ -66,7 +66,7 @@ fixed_extraction, fixed_stock, fixed_new_capacity, fixed_capacity, fixed_activit
 * BZ added
 investment_upper
 * BZ added for storage
-bound_storage_lo,time_seq
+bound_storage_lo,bound_storage_up,storage_loss,time_seq
 ;
 
 *----------------------------------------------------------------------------------------------------------------------*
@@ -132,16 +132,27 @@ emission_scaling(type_emission,emission)$( cat_emission(type_emission,emission)
 
 * BZ added for storage
 * mapping of storage technologies for charging to their commodities
-map_tec_chrg(node,tec,mode,commodity,year_all,time)$(
-    SUM((node2,year_all2,level_storage,time_act),
-        output(node2,tec,year_all,year_all2,mode,node,commodity,level_storage,time_act,time) ) ) = yes;
-storage_tec_chrg(tec)$(
-     SUM((node,mode,commodity,year_all,time), map_tec_chrg(node,tec,mode,commodity,year_all,time) ) ) = yes;
+
+map_tec_charge(node,tec,mode,commodity,level,year_all,time)$(
+    SUM((node2,year_all2,time_act)$( SUM(storage_tec,map_tec_storage(tec,storage_tec) ) ),
+        output(node2,tec,year_all,year_all2,mode,node,commodity,level,time_act,time) ) OR
+    SUM((node2,year_all2,time_act)$( SUM(storage_tec,map_tec_storage(tec,storage_tec) ) ),
+        input(node2,tec,year_all,year_all2,mode,node,commodity,level,time_act,time) ) ) = yes;
+$ontext
+charge_tec(tec)$(
+     SUM((node,mode,commodity,year_all,time), map_tec_charge(node,tec,mode,commodity,year_all,time) ) ) = yes;
 
 * mapping of storage technologies for discharging to their commodities
-map_tec_dchrg(node,tec,mode,commodity,year_all,time)$(
+map_tec_discharge(node,tec,mode,commodity,year_all,time)$(
     SUM((node2,year_all2,level_storage,time_act),
         input(node2,tec,year_all,year_all2,mode,node,commodity,level_storage,time_act,time) ) ) = yes;
+discharge_tec(tec)$(
+     SUM((node,mode,commodity,year_all,time), map_tec_discharge(node,tec,mode,commodity,year_all,time) ) ) = yes;
+
+* mapping of storage reservoir technologies
+map_tec_storage(node,tec,level,year_all,time)$(
+    SUM((commodity), storage_loss(node,tec,commodity,level,year_all,time) ) ) = yes;
+$offtext
 *----------------------------------------------------------------------------------------------------------------------*
 * sanity checks on the data set                                                                                        *
 *----------------------------------------------------------------------------------------------------------------------*

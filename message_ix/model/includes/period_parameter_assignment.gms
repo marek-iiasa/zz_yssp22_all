@@ -45,7 +45,8 @@ map_period(year_all,year_all2)$( ORD(year_all) <= ORD(year_all2) ) = yes ;
 
 * BZ added for storage
 * mapping of sequence of time over a period
-
+map_time_seq(time2,time)$( time_seq(time) AND (time_seq(time2) + 1 = time_seq(time) ) ) = yes;
+map_time_seq('year',time) = no;
 * dynamic sets (singleton) with first and last periods in model horizon of MESSAGEix (for easier reference)
 first_period(year_all) = no ;
 first_period(year_all)$( cat_year("firstmodelyear",year_all) ) = yes ;

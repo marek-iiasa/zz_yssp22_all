@@ -134,6 +134,9 @@ Variables
     EMISS(node,emission,type_tec,year_all)       aggregate emissions by technology type and land-use model emulator
 * auxiliary variable for left-hand side of relations (linear constraints)
     REL(relation,node,year_all)                  auxiliary variable for left-hand side of user-defined relations
+
+* BZ added for storage
+    STORAGE_CHG(node,tec,commodity,level,year_all,time)   change in the content of storage (positive or negative)
 ;
 
 ***
@@ -232,6 +235,9 @@ Positive variables
     SLACK_LAND_TYPE_LO(node,year_all,land_type)       slack variable for dynamic land type constraint relaxation (downwards)
     SLACK_RELATION_BOUND_UP(relation,node,year_all)   slack variable for upper bound of generic relation
     SLACK_RELATION_BOUND_LO(relation,node,year_all)   slack variable for lower bound of generic relation
+
+* BZ added for storage
+    STORAGE(node,tec,commodity,year_all,time)       content of storage (positive)
 ;
 
 *----------------------------------------------------------------------------------------------------------------------*
@@ -284,8 +290,13 @@ Equations
     RELATION_CONSTRAINT_LO          lower bound of relations (linear constraints)
 * BZ added
     INVESTMENT_CONSTRAINT_UP        upper bound of the investment (by year and type of technology)
-;
 
+* BZ added for storage
+    STORAGE_CHANGE                  change in the content of storage
+    STORAGE_BALANCE                 storage commodity (content) balance
+    STORAGE_BOUND_LO                lower bound of the content of storage
+    STORAGE_BOUND_UP                upper bound of the content of storage
+;
 *----------------------------------------------------------------------------------------------------------------------*
 * equation statements                                                                                                  *
 *----------------------------------------------------------------------------------------------------------------------*
@@ -558,6 +569,9 @@ COMMODITY_BALANCE(node,commodity,level,year,time)$( map_commodity(node,commodity
         * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time2) )
 * quantity taken out from ( >0 ) or put into ( <0 ) inter-period stock (storage)
     + STOCK_CHG(node,commodity,level,year,time)$( map_stocks(node,commodity,level,year) )
+* bz: quantity stored in storage
+*    - SUM( (tec)$( map_tec_storage(node,tec,level,year,time) ), STORAGE_CHG(node,tec,commodity,level,year,time) )
+
 * yield from land-use model emulator
     + SUM(land_scenario,
         ( land_output(node,land_scenario,year,commodity,level,time)
@@ -1532,14 +1546,54 @@ INVESTMENT_CONSTRAINT_UP(node,type_year,type_tec)$( investment_upper(node,type_y
 * upper bound on investment (by type of year and type of technology)
          =L= investment_upper(node,type_year,type_tec) ;
 
-*EMISSION_CONSTRAINT(node,type_emission,type_tec,type_year)$is_bound_emission(node,type_emission,type_tec,type_year)..
-*    SUM( (year_all2,emission)$( cat_year(type_year,year_all2) AND cat_emission(type_emission,emission) ),
-*        duration_period(year_all2) * emission_scaling(type_emission,emission) *
-*            ( EMISS(node,emission,type_tec,year_all2)$( year(year_all2) )
-*                + historical_emission(node,emission,type_tec,year_all2) )
-*      )
-*    / SUM(year_all2$( cat_year(type_year,year_all2) ), duration_period(year_all2) )
-*    =L= bound_emission(node,type_emission,type_tec,type_year) ;
+***  BZ added
+* Equation STORAGE_BALANCE
+***********************ADRIANO's WORK**********************************
+$ontext
+STORAGE_BALANCE(node,commodity,level,year,time)$( map_storage(node,commodity,level,year,time) AND bound_storage_up(node,commodity,level,year,time) )..
+    STORAGE(node,commodity,level,year,time)
+* fixed level of storage (i.e. in first period)
+    - commodity_storage(node,commodity,level,year,time) =E= ( storage_to_activity(time)*STORAGE_CHG(node,commodity,level,year,time) )
+* the next line is just saying STORAGE(t-1)
+   + SUM((time2,year2)$seq_year_time(year2,year,time2,time), STORAGE(node,commodity,level,year2,time2) *
+   (1 - storage_loss(node,commodity,level,year2,time2)) ) ;
+$offtext
+***********************************************************************
+STORAGE_CHANGE(node,tec,commodity,level,year,time)$( SUM(mode,map_tec_charge(node,tec,mode,commodity,level,year,time) ) )..
+* change in the content of storage in the examined timestep
+    STORAGE_CHG(node,tec,commodity,level,year,time) =E=
+* increase in the content of storage due to the activity of charging technologies located at 'location' sending to 'node', and 'time2' sending to 'time'
+        - SUM((location,vintage,mode,time2)$(map_tec_lifetime(node,tec,vintage,year) ),
+        output(location,tec,vintage,year,mode,node,commodity,level,time2,time)
+        * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time2) )
+* decrease in the content of storage due to the activity of discharging technologies located at 'location' sending to 'node', and 'time2' sending to 'time'
+        + SUM((location,vintage,mode,time2)$(map_tec_lifetime(node,tec,vintage,year) ),
+        input(location,tec,vintage,year,mode,node,commodity,level,time2,time)
+        * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time2) );
+
+STORAGE_BALANCE(node,storage_tec,commodity,year,time)$ ( SUM(level,storage_loss(node,storage_tec,commodity,level,year,time) ) )..
+* Showing the content level of storage at each timestep
+       STORAGE(node,storage_tec,commodity,year,time)
+* ignoring the the fixed amount of storage in that time (e.g., the storage content in the first subannual period)
+*    - commodity_storage(node,commodity,level,year,time)
+    =E=
+* change in the content of storage in the examined timestep
+    SUM((tec,level)$( map_tec_storage(tec,storage_tec) ), STORAGE_CHG(node,tec,commodity,level,year,time) )
+* storage content in the previous subannual timestep
+    + SUM((time2)$map_time_seq(time2,time), STORAGE(node,storage_tec,commodity,year,time2)  *
+* considering storage losses due to keeping the storage media between two subannual timesteps
+    (1 - SUM(level,storage_loss(node,storage_tec,commodity,level,year,time2) ) ) ) ;
+
+
+STORAGE_BOUND_UP(node,storage_tec,commodity,level,year,time)$(bound_storage_up(node,storage_tec,commodity,level,year,time) )..
+   STORAGE(node,storage_tec,commodity,year,time) =L= bound_storage_up(node,storage_tec,commodity,level,year,time)*
+         (duration_time(time) * SUM(vintage, capacity_factor(node,storage_tec,vintage,year,time) * CAP(node,storage_tec,vintage,year) ) ) ;
+
+
+STORAGE_BOUND_LO(node,storage_tec,commodity,level,year,time)$(bound_storage_lo(node,storage_tec,commodity,level,year,time) )..
+   STORAGE(node,storage_tec,commodity,year,time) =G= bound_storage_lo(node,storage_tec,commodity,level,year,time)*
+         (duration_time(time) * SUM(vintage, capacity_factor(node,storage_tec,vintage,year,time) * CAP(node,storage_tec,vintage,year) ) ) ;
+
 *----------------------------------------------------------------------------------------------------------------------*
 * model statements                                                                                                     *
 *----------------------------------------------------------------------------------------------------------------------*
@@ -1590,6 +1644,12 @@ Model MESSAGE_LP /
     RELATION_CONSTRAINT_LO
 * BZ added
     INVESTMENT_CONSTRAINT_UP
+
+* Bz added for storage
+    STORAGE_CHANGE
+    STORAGE_BALANCE
+    STORAGE_BOUND_UP
+    STORAGE_BOUND_LO
 / ;
 
 MESSAGE_LP.holdfixed = 1 ;
