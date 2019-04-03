@@ -237,7 +237,7 @@ Positive variables
     SLACK_RELATION_BOUND_LO(relation,node,year_all)   slack variable for lower bound of generic relation
 
 * BZ added for storage
-    STORAGE(node,tec,commodity,year_all,time)       content of storage (positive)
+    STORAGE(node,tec,commodity,level,year_all,time)       content of storage (positive)
 ;
 
 *----------------------------------------------------------------------------------------------------------------------*
@@ -294,6 +294,7 @@ Equations
 * BZ added for storage
     STORAGE_CHANGE                  change in the content of storage
     STORAGE_BALANCE                 storage commodity (content) balance
+    STORAGE_INIT                    initial content of storage in the first timestep
     STORAGE_BOUND_LO                lower bound of the content of storage
     STORAGE_BOUND_UP                upper bound of the content of storage
 ;
@@ -1571,27 +1572,30 @@ STORAGE_CHANGE(node,tec,commodity,level,year,time)$( SUM(mode,map_tec_charge(nod
         input(location,tec,vintage,year,mode,node,commodity,level,time2,time)
         * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time2) );
 
-STORAGE_BALANCE(node,storage_tec,commodity,year,time)$ ( SUM(level,storage_loss(node,storage_tec,commodity,level,year,time) ) )..
+STORAGE_BALANCE(node,storage_tec,commodity,level,year,time)$ ( storage_loss(node,storage_tec,commodity,level,year,time)  )..
 * Showing the content level of storage at each timestep
-       STORAGE(node,storage_tec,commodity,year,time)
+       STORAGE(node,storage_tec,commodity,level,year,time)
 * ignoring the the fixed amount of storage in that time (e.g., the storage content in the first subannual period)
 *    - commodity_storage(node,commodity,level,year,time)
     =E=
 * change in the content of storage in the examined timestep
-    SUM((tec,level)$( map_tec_storage(tec,storage_tec) ), STORAGE_CHG(node,tec,commodity,level,year,time) )
+    SUM((tec)$( map_tec_storage(tec,storage_tec) ), STORAGE_CHG(node,tec,commodity,level,year,time) )
 * storage content in the previous subannual timestep
-    + SUM((time2)$map_time_seq(time2,time), STORAGE(node,storage_tec,commodity,year,time2)  *
+    + SUM((time2)$map_time_seq(time2,time), STORAGE(node,storage_tec,commodity,level,year,time2)  *
 * considering storage losses due to keeping the storage media between two subannual timesteps
-    (1 - SUM(level,storage_loss(node,storage_tec,commodity,level,year,time2) ) ) ) ;
+    (1 - storage_loss(node,storage_tec,commodity,level,year,time2) ) ) ;
 
+STORAGE_INIT(node,storage_tec,commodity,level,year,'1')$ ( storage_loss(node,storage_tec,commodity,level,year,'1')  )..
+* Showing the content level of storage at each timestep
+       STORAGE(node,storage_tec,commodity,level,year,'1') =E= 0 ;
 
 STORAGE_BOUND_UP(node,storage_tec,commodity,level,year,time)$(bound_storage_up(node,storage_tec,commodity,level,year,time) )..
-   STORAGE(node,storage_tec,commodity,year,time) =L= bound_storage_up(node,storage_tec,commodity,level,year,time)*
+   STORAGE(node,storage_tec,commodity,level,year,time) =L= bound_storage_up(node,storage_tec,commodity,level,year,time)*
          (duration_time(time) * SUM(vintage, capacity_factor(node,storage_tec,vintage,year,time) * CAP(node,storage_tec,vintage,year) ) ) ;
 
 
 STORAGE_BOUND_LO(node,storage_tec,commodity,level,year,time)$(bound_storage_lo(node,storage_tec,commodity,level,year,time) )..
-   STORAGE(node,storage_tec,commodity,year,time) =G= bound_storage_lo(node,storage_tec,commodity,level,year,time)*
+   STORAGE(node,storage_tec,commodity,level,year,time) =G= bound_storage_lo(node,storage_tec,commodity,level,year,time)*
          (duration_time(time) * SUM(vintage, capacity_factor(node,storage_tec,vintage,year,time) * CAP(node,storage_tec,vintage,year) ) ) ;
 
 *----------------------------------------------------------------------------------------------------------------------*
@@ -1648,6 +1652,7 @@ Model MESSAGE_LP /
 * Bz added for storage
     STORAGE_CHANGE
     STORAGE_BALANCE
+    STORAGE_INIT
     STORAGE_BOUND_UP
     STORAGE_BOUND_LO
 / ;
