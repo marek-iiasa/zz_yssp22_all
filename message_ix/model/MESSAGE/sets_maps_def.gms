@@ -363,13 +363,14 @@ Sets
 
 * BZ added for storage
 Sets
-*    level_storage(level)                                         levels of storage
+    level_storage(level)                                         levels of storage
     map_tec_charge(node,tec,mode,commodity,level,year_all,time)        mapping of charging technologies (for storage) to their commodities
-*    map_tec_discharge(node,tec,mode,commodity,year_all,time)     mapping of discharging technologies (for storage) to their commodities
-    storage_tec(tec)                                              set of storage technologies (like dam)
+    map_tec_discharge(node,tec,mode,commodity,level,year_all,time)     mapping of discharging technologies (for storage) to their commodities
     map_tec_storage(tec,tec2)                                     mapping of charge and discharging technologies (for storage) to their respective storage
-    map_storage(node,tec,commodity,level,year_all,time)                mapping of discharging technologies (for storage) to their commodities
+    map_tec_storage_level(node,tec,tec2,level,year_all,time)                mapping of discharging technologies (for storage) to their commodities
 *    storage_convertion_tec(tec)                                              charge and discharge technologies
-*    discharge_tec(tec)                                           charging technologies
+    storage_tec(tec)                                              set of storage technologies (like dam)
+    charge_tec(tec)                                              charging technologies
+    discharge_tec(tec)                                           charging technologies
 
 ;
