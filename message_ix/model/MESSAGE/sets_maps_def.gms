@@ -346,6 +346,8 @@ Sets
 
     is_relation_upper(relation,node,year_all)     flag whether upper bounds exists for generic relation
     is_relation_lower(relation,node,year_all)     flag whether lower bounds exists for generic relation
+* BZ added
+*    is_investment_upper(node,type_tec,year_all)     flag whether upper bounds exists for investment
 ;
 
 *----------------------------------------------------------------------------------------------------------------------*
@@ -369,4 +371,18 @@ Sets
     is_fixed_capacity(node,tec,vintage,year_all)           flag whether maintained capacity variable is fixed
     is_fixed_activity(node,tec,vintage,year_all,mode,time) flag whether activity variable is fixed
     is_fixed_land(node,land_scenario,year_all)             flag whether land level is fixed
+;
+
+* BZ added for storage
+Sets
+    level_storage(level)                                         levels of storage
+    map_tec_charge(node,tec,mode,commodity,level,year_all,time)        mapping of charging technologies (for storage) to their commodities
+    map_tec_discharge(node,tec,mode,commodity,level,year_all,time)     mapping of discharging technologies (for storage) to their commodities
+    map_tec_storage(tec,tec2)                                     mapping of charge and discharging technologies (for storage) to their respective storage
+    map_tec_storage_level(node,tec,tec2,level,year_all,time)                mapping of discharging technologies (for storage) to their commodities
+*    storage_convertion_tec(tec)                                              charge and discharge technologies
+    storage_tec(tec)                                              set of storage technologies (like dam)
+    charge_tec(tec)                                              charging technologies
+    discharge_tec(tec)                                           charging technologies
+
 ;

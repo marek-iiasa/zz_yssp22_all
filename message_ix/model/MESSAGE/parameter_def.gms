@@ -699,3 +699,21 @@ Parameters
     ctr               counter parameter for loops
     status(*,*)       model solution status parameter for log writing
 ;
+
+*----------------------------------------------------------------------------------------------------------------------*
+* BZ added for the investment cap
+*    * - Parameter name
+*      - Index dimensions
+*    * - investment_upper
+*      - ``node`` | ``type_year``| ``type_tec``
+Parameters
+    investment_upper(node, type_year, type_tec)  upper bound on investment by node and (type of) year and type of technology
+;
+
+* BZ added for storage
+Parameters
+    bound_storage_lo(node,tec,commodity,level,year_all,time)            lower bound of storage section (percentage)
+    bound_storage_up(node,tec,commodity,level,year_all,time)            upper bound of storage section (percentage)
+    storage_loss(node,tec,commodity,level,year_all,time)                storage losses per timestep (percentage)
+    time_seq(time)                                                      sequence of subannual timesteps
+;
