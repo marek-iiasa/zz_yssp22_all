@@ -54,3 +54,9 @@ tests/testdb/test.properties
 tests/testdb/ixmptest.properties
 tests/testdb/ixmptest.lck
 .Rproj.user
+
+message_ix/model/225b/
+
+*.cmd
+
+message_ix/model/cplex\.properties

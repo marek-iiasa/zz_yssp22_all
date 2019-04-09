@@ -16,6 +16,6 @@
 *growth_activity_lo('R14_NAM', 'LNG_exp', year_all, time) = 0.05;
 *historical_activity('R14_NAM', 'LNG_prod', '2015','M1', time) = 47;
 *output('R14_CAS', 'elec_exp', year_all, year_all, 'M1', 'R14_CAS', 'electr', level, time, time) = 0;
-*bound_emission('World','TCE','all','cumulative') =3630;
+bound_emission('World','TCE','all','cumulative') =2700;
 
 
