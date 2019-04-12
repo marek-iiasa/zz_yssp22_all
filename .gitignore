@@ -60,3 +60,5 @@ message_ix/model/225b/
 *.cmd
 
 message_ix/model/cplex\.properties
+
+message_ix/model/cplex\.opt
