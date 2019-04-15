@@ -62,3 +62,13 @@ message_ix/model/225b/
 message_ix/model/cplex\.properties
 
 message_ix/model/cplex\.opt
+
+message_ix/model/\$gms1\.par
+
+message_ix/model/MESSAGE/input_editor\.gms
+
+message_ix/model/\.Rhistory
+
+message_ix/model/cplex\.op2
+
+message_ix/config/default\.properties

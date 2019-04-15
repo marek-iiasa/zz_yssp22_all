@@ -320,4 +320,5 @@ MODEL MESSAGE_MACRO /
     TERMINAL_CONDITION
 / ;
 
-MESSAGE_MACRO.optfile = 1;
+* BZ changed to 2
+MESSAGE_MACRO.optfile = 2;

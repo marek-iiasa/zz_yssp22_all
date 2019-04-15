@@ -70,6 +70,8 @@ is_fixed_extraction, is_fixed_stock, is_fixed_new_capacity, is_fixed_capacity, i
 fixed_extraction, fixed_stock, fixed_new_capacity, fixed_capacity, fixed_activity, fixed_land
 ;
 
+* BZ added:
+*map_tec_time(node,tec,year_all,'year')= no;
 *----------------------------------------------------------------------------------------------------------------------*
 * auxiliary mappings for the implementation of bounds over all modes and system reliability/flexibility constraints    *
 *----------------------------------------------------------------------------------------------------------------------*
