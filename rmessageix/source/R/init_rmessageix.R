@@ -19,16 +19,17 @@ utils::globalVariables(c("ixmp_path"))
 .onLoad <- function(libname, pkgname) {
 
   ## Set path ixmp folder in message_ix working copy
-  ixmp_path <<- Sys.getenv("IXMP_PATH")
+  #ixmp_path <<- Sys.getenv("IXMP_PATH")
+  ixmp_path <<- Sys.getenv("MESSAGE_IX_PATH")   # BZ changed
 
   if(ixmp_path == "")
     warning("Check MESSAGE model installation")
   
-  # careful to have all the slashes in the same direction
-  model_file = gsub("/","\\\\" ,file.path( paste(ixmp_path, "\\message_ix\\model", sep = '') , "{model}_run.gms" ) )
-  inp = gsub("/","\\\\" , file.path( paste(ixmp_path, "\\message_ix\\model\\data", sep = '') , "MsgData_{case}.gdx" ) )
-  outp = gsub("/","\\\\" , file.path( paste(ixmp_path, "\\message_ix\\model\\output", sep = '') , "MsgOutput_{case}.gdx" ) )
-  iter_file = gsub("/","\\\\" , file.path( paste(ixmp_path, "\\message_ix\\model\\output", sep = '') , "MsgIterationReport_{case}.gdx" ) )
+  # careful to have all the slashes in the same direction  # BZ changed (removed message_ix)
+  model_file = gsub("/","\\\\" ,file.path( paste(ixmp_path, "\\model", sep = '') , "{model}_run.gms" ) )
+  inp = gsub("/","\\\\" , file.path( paste(ixmp_path, "\\model\\data", sep = '') , "MsgData_{case}.gdx" ) )
+  outp = gsub("/","\\\\" , file.path( paste(ixmp_path, "\\model\\output", sep = '') , "MsgOutput_{case}.gdx" ) )
+  iter_file = gsub("/","\\\\" , file.path( paste(ixmp_path, "\\model\\output", sep = '') , "MsgIterationReport_{case}.gdx" ) )
   solve_args = paste("--in=",inp," --out=",outp," --iter=", iter_file, sep = '')
   
   for (i in c("MESSAGE","MESSAGE-MACRO")) {
