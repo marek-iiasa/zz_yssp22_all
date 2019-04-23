@@ -153,6 +153,10 @@ report_new_capacity(node,inv_tec,year)$( map_tec(node,inv_tec,year) ) =
 report_total_capacity(node,inv_tec,year)$( map_tec(node,inv_tec,year) ) =
     sum(vintage, CAP.l(node,inv_tec,vintage,year) ) ;
 
+report_total_capacity(node,inv_tec,historical) $( sum(vintage, map_tec_lifetime(node,inv_tec,vintage,historical) ) ) =
+    sum(vintage, remaining_capacity(node,inv_tec,vintage,historical) *
+        duration_period(historical) * historical_new_capacity(node,inv_tec,vintage) );
+
 * write the total 'activity' (summed over all vintages)
 *report_activity(node,tec,year_all,"ref")$( map_tec(node,tec,year_all) ) =
 *    sum((mode,time), ref_activity(node,tec,year_all,mode,time) ) ;

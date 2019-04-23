@@ -72,7 +72,7 @@ $INCLUDE MESSAGE/model_solve.gms
 *----------------------------------------------------------------------------------------------------------------------*
 * post-processing and export to gdx                                                                                    *
 *----------------------------------------------------------------------------------------------------------------------*
-*$ONTEXT
+$ONTEXT
 * calculation of commodity import costs by node, commodity and year
 import_cost(node2, commodity, year) =
           SUM( (node,tec,vintage,mode,level,time,time2)$( (NOT sameas(node,node2)) AND map_tec_act(node2,tec,year,mode,time2)
