@@ -105,7 +105,7 @@ COST_NODAL_NET.L(location,year) =
         emission_scaling(type_emission,emission) * tax_emission(node,type_emission,type_tec,type_year)
         * EMISS.L(location,emission,type_tec,year) )
 ;
-*$OFFTEXT
+$OFFTEXT
 * include MESSAGE reporting
 $INCLUDE MESSAGE/reporting.gms
 
