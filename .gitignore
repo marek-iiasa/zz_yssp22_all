@@ -72,3 +72,5 @@ message_ix/model/\.Rhistory
 message_ix/model/cplex\.op2
 
 message_ix/config/default\.properties
+
+*.~~g

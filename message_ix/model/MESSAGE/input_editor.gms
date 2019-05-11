@@ -1,6 +1,8 @@
 
 *technical_lifetime('R11_WEU', 'gas_cc', '2020') = 30;
-*growth_activity_up('R14_RUS', 'nuc_hc', year_all, time) = 0.05;
+*growth_activity_up('R14_RUS', 'gas_exp_weu', year_all, time) = 0.04;
+*growth_activity_up('R14_MEA', 'gas_exp_weu', year_all, time) = 0.04;
+*growth_activity_up('R14_AFR', 'gas_exp_weu', year_all, time) = 0.04;
 *growth_activity_up('R14_UBM', 'nuc_hc', year_all, time) = 0.05;
 *initial_activity_up('R14_RUS', 'elec_i', '2035', time) = 0.01;
 *initial_activity_up('R14_MEA', 'elec_i', '2035', time) = 0.01;
