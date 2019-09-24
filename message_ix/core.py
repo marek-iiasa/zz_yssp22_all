@@ -438,7 +438,7 @@ class Scenario(ixmp.Scenario):
         ix_name_map = {}
         dfs = {}
         for ix_type, (list_func, get_func) in funcs.items():
-            for item in list_func():
+            for item in sorted(list_func(), key=str.lower):
                 df = get_func(item)
                 df = pd.Series(df) if isinstance(df, dict) else df
                 if not df.empty:
