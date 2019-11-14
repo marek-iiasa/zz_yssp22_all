@@ -77,7 +77,8 @@ fixed_extraction, fixed_stock, fixed_new_capacity, fixed_capacity, fixed_activit
 *----------------------------------------------------------------------------------------------------------------------*
 
 map_node(node,node) = yes ;
-
+* BZ added for time steps
+map_tec_time(node,tec,year_all,'year')=no;
 *----------------------------------------------------------------------------------------------------------------------*
 * auxiliary mappings for the implementation of bounds over all modes and system reliability/flexibility constraints    *
 *----------------------------------------------------------------------------------------------------------------------*
@@ -188,7 +189,7 @@ if (check,
 loop(lvl_temporal,
     loop(time2$( sum(time, map_temporal_hierarchy(lvl_temporal,time,time2) ) ),
         check = 1$( sum( time$( map_temporal_hierarchy(lvl_temporal,time,time2) ),
-            duration_time(time) ) ne duration_time(time2) ) ;
+            duration_time(time) ) > duration_time(time2) + 0.001 ) ;
     ) ;
 ) ;
 if (check,
