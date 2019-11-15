@@ -69,6 +69,8 @@ demand_fixed=demand
 * fixing variables to pre-specified values
 is_fixed_extraction, is_fixed_stock, is_fixed_new_capacity, is_fixed_capacity, is_fixed_activity, is_fixed_land
 fixed_extraction, fixed_stock, fixed_new_capacity, fixed_capacity, fixed_activity, fixed_land
+* BZ added
+relation_activity_time, relation_upper_time, relation_lower_time, emission_factor_time
 ;
 
 
@@ -78,7 +80,7 @@ fixed_extraction, fixed_stock, fixed_new_capacity, fixed_capacity, fixed_activit
 
 map_node(node,node) = yes ;
 * BZ added for time steps
-map_tec_time(node,tec,year_all,'year')=no;
+*map_tec_time(node,tec,year_all,'year')=yes;
 *----------------------------------------------------------------------------------------------------------------------*
 * auxiliary mappings for the implementation of bounds over all modes and system reliability/flexibility constraints    *
 *----------------------------------------------------------------------------------------------------------------------*

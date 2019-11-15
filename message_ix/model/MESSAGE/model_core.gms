@@ -142,6 +142,11 @@ Variables
     REL(relation,node,year_all)                  auxiliary variable for left-hand side of user-defined relations
 * auxiliary variable for left-hand side of commodity balance
     COMM(node,commodity,level,year_all,time)         auxiliary variable for left-hand side of commodity balance
+* BZ added
+* time-related auxiliary variable for aggregate emissions by technology type and land-use model emulator
+    EMISS_TIME(node,emission,type_tec,year_all,time)       aggregate emissions by technology type and land-use model emulator
+* time-related auxiliary variable for left-hand side of relations (linear constraints)
+    REL_TIME(relation,node,year_all,time)                  auxiliary variable for left-hand side of user-defined relations
 ;
 
 ***
@@ -302,6 +307,11 @@ Equations
     RELATION_EQUIVALENCE            auxiliary equation to simplify the implementation of relations
     RELATION_CONSTRAINT_UP          upper bound of relations (linear constraints)
     RELATION_CONSTRAINT_LO          lower bound of relations (linear constraints)
+* BZ added
+    EMISSION_EQUIVALENCE_TIME       time dependentauxiliary equation to simplify the notation of emissions
+    RELATION_EQUIVALENCE_TIME       time dependent auxiliary equation to simplify the implementation of relations
+    RELATION_CONSTRAINT_UP_TIME     time dependentupper bound of relations (linear constraints)
+    RELATION_CONSTRAINT_LO_TIME     time dependent lower bound of relations (linear constraints)
 ;
 
 *----------------------------------------------------------------------------------------------------------------------*
@@ -1707,6 +1717,20 @@ EMISSION_EQUIVALENCE(node,emission,type_tec,year)..
             land_emission(location,land_scenario,year,emission) * LAND(location,land_scenario,year) )
       ) ;
 
+
+*##############################################################################################
+* BZ added: time-related emissions
+EMISSION_EQUIVALENCE_TIME(node,emission,type_tec,year,time)..
+    EMISS_TIME(node,emission,type_tec,year,time)
+    =E=
+    SUM(location$( map_node(node,location) ),
+* emissions from technology activity
+        SUM((tec,vintage,mode)$( cat_tec(type_tec,tec)
+            AND map_tec_act(location,tec,year,mode,time) AND map_tec_lifetime(location,tec,vintage,year) ),
+        emission_factor_time(location,tec,vintage,year,mode,emission,time) * ACT(location,tec,vintage,year,mode,time) )
+      ) ;
+
+*##############################################################################################
 ***
 * Bound on emissions
 * ^^^^^^^^^^^^^^^^^^
@@ -1956,6 +1980,33 @@ RELATION_EQUIVALENCE(relation,node,year)..
           )
       ) ;
 
+*##############################################################################################
+* BZ added: relation_activity for time
+RELATION_EQUIVALENCE_TIME(relation,node,year,time)..
+    REL_TIME(relation,node,year,time)
+        =E=
+    SUM(tec,
+        ( relation_new_capacity(relation,node,year,tec) * CAP_NEW(node,tec,year)
+          + relation_total_capacity(relation,node,year,tec)
+            * SUM(vintage$( map_tec_lifetime(node,tec,vintage,year) ), CAP(node,tec,vintage,year) )
+          )$( inv_tec(tec) )
+        + SUM((location,year_all2,mode)$( map_tec_act(location,tec,year_all2,mode,time) ),
+            relation_activity_time(relation,node,year,location,tec,year_all2,mode,time)
+            * ( SUM(vintage$( map_tec_lifetime(location,tec,vintage,year_all2) ),
+                  ACT(location,tec,vintage,year_all2,mode,time) )
+                  + historical_activity(location,tec,year_all2,mode,time) )
+          )
+      ) ;
+
+RELATION_CONSTRAINT_UP_TIME(relation,node,year,time)$( relation_upper_time(relation,node,year,time) )..
+    REL_TIME(relation,node,year,time)
+    =L= relation_upper_time(relation,node,year,time) ;
+
+RELATION_CONSTRAINT_LO_TIME(relation,node,year,time)$( relation_lower_time(relation,node,year,time) )..
+    REL_TIME(relation,node,year,time)
+    =G= relation_lower_time(relation,node,year,time) ;
+
+*##############################################################################################
 ***
 * Upper and lower bounds on user-defined relations
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

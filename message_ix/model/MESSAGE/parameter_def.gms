@@ -226,6 +226,9 @@ Parameters
     flexibility_factor(node,tec,vintage,year_all,mode,commodity,level,time,rating) contribution of technologies towards operation flexibility constraint
     renewable_capacity_factor(node,commodity,grade,level,year_all) quality of renewable potential grade (>= 1)
     renewable_potential(node,commodity,grade,level,year_all) size of renewable potential per grade
+
+* BZ added
+    emission_factor_time(node,tec,year_all,year_all,mode,emission,time) time-related emission intensity of activity
 ;
 
 ***
@@ -636,6 +639,11 @@ Parameters
     relation_new_capacity(relation,node,year_all,tec)   new capacity factor (multiplier) of generic relation
     relation_total_capacity(relation,node,year_all,tec) total capacity factor (multiplier) of generic relation
     relation_activity(relation,node,year_all,node,tec,year_all,mode) activity factor (multiplier) of generic relation
+
+* BZ added
+    relation_upper_time(relation,node,year_all,time)    time-related upper bound of generic relation
+    relation_lower_time(relation,node,year_all,time)    time-related lower bound of generic relation
+    relation_activity_time(relation,node,year_all,node,tec,year_all,mode,time) time-related activity factor (multiplier) of generic relation
 ;
 
 *----------------------------------------------------------------------------------------------------------------------*
