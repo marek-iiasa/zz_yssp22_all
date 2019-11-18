@@ -424,6 +424,19 @@ COST_ACCOUNTING_NODAL(node, year)..
         emission_scaling(type_emission,emission)
         * tax_emission(node,type_emission,type_tec,type_year)
         * EMISS(node,emission,type_tec,year) )
+*######################################################################################
+* BZ added
+* emission taxes (by parent node, type of technology, type of year and type of emission)
+    + SUM((type_emission,emission,type_tec,type_year)$( emission_scaling(type_emission,emission)
+            AND cat_year(type_year,year) ),
+        emission_scaling(type_emission,emission)
+        * tax_emission(node,type_emission,type_tec,type_year)
+        * SUM(time, EMISS_TIME(node,emission,type_tec,year,time) ) )
+
+* cost terms associated with linear relations
+    + SUM(relation$( relation_cost(relation,node,year) ),
+        relation_cost(relation,node,year) * SUM(time,REL_TIME(relation,node,year,time) ) )
+*#####################################################################################
 * cost terms from land-use model emulator (only includes valid node-land_scenario-year combinations)
     + SUM(land_scenario$( land_cost(node,land_scenario,year) ),
         land_cost(node,land_scenario,year) * LAND(node,land_scenario,year) )
@@ -1760,6 +1773,9 @@ EMISSION_CONSTRAINT(node,type_emission,type_tec,type_year)$is_bound_emission(nod
     SUM( (year_all2,emission)$( cat_year(type_year,year_all2) AND cat_emission(type_emission,emission) ),
         duration_period(year_all2) * emission_scaling(type_emission,emission) *
             ( EMISS(node,emission,type_tec,year_all2)$( year(year_all2) )
+* BZ added this line below for time-related emission factors
+                + SUM(time,EMISS_TIME(node,emission,type_tec,year_all2,time) )$( year(year_all2) )
+
                 + historical_emission(node,emission,type_tec,year_all2) )
       )
     / SUM(year_all2$( cat_year(type_year,year_all2) ), duration_period(year_all2) )
