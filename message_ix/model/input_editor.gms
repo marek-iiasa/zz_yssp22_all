@@ -22,6 +22,7 @@
 *output('R14_CAS', 'elec_exp', year_all, year_all, 'M1', 'R14_CAS', 'electr', level, time, time) = 0;
 *bound_emission('World','TCE','all','cumulative') =3630;
 *bound_new_capacity_lo('R14_NAM', 'gas_cc', '2025') = 0;
+*initial_new_capacity_up('R11_SAS', 'hydro_hc', '2020') = 0.25;
 *bound_total_capacity_lo('R14_NAM', 'LNG_exp', '2030') = 0;
 *relation_activity('UE_industry_th_gas', 'R14_NAM', year_all, 'R14_NAM', 'useful_industry_th', year_all, 'M1') = -0.1;
 *relation_activity('UE_feedstock_gas', 'R14_NAM', year_all, 'R14_NAM', 'useful_feedstock', year_all, 'M1') = -0.1;
