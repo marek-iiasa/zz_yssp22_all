@@ -126,6 +126,9 @@ Positive Variables
     ACT_LO(node,tec,year_all,time)   relaxation variable for dynamic constraints on activity (downwards)
 * land-use model emulator
     LAND(node,land_scenario,year_all) relative share of land-use scenario
+* content of storage
+    STORAGE(node,tec,level,year_all,time)       content of storage at each sub-annual time step (positive)
+;
 
 Variables
 * intertemporal stock variables (input or output quantity into the stock)
@@ -142,6 +145,8 @@ Variables
     REL(relation,node,year_all)                  auxiliary variable for left-hand side of user-defined relations
 * auxiliary variable for left-hand side of commodity balance
     COMM(node,commodity,level,year_all,time)         auxiliary variable for left-hand side of commodity balance
+* change in the content of storage device
+    STORAGE_CHG(node,tec,level,year_all,time)   change in the content of storage (positive or negative)
 * BZ added
 * time-related auxiliary variable for aggregate emissions by technology type and land-use model emulator
     EMISS_TIME(node,emission,type_tec,year_all,time)       aggregate emissions by technology type and land-use model emulator
@@ -307,6 +312,12 @@ Equations
     RELATION_EQUIVALENCE            auxiliary equation to simplify the implementation of relations
     RELATION_CONSTRAINT_UP          upper bound of relations (linear constraints)
     RELATION_CONSTRAINT_LO          lower bound of relations (linear constraints)
+    STORAGE_CHANGE                  change in the content of storage
+    STORAGE_BALANCE                 balance of the content of storage
+    STORAGE_BALANCE_INIT            balance of the content of storage at the first time step
+    STORAGE_REL                     relation between the content of storage in two different time steps (content in time_first * value = content in time_last)
+    STORAGE_BOUND_LO                lower bound of the content of storage
+    STORAGE_BOUND_UP                upper bound of the content of storage
 * BZ added
     EMISSION_EQUIVALENCE_TIME       time dependentauxiliary equation to simplify the notation of emissions
     RELATION_EQUIVALENCE_TIME       time dependent auxiliary equation to simplify the implementation of relations
@@ -584,7 +595,8 @@ RESOURCE_HORIZON(node,commodity,grade)$( SUM(year$map_resource(node,commodity,gr
 *     & = COMMODITY\_BALANCE{n,c,l,y,h} \quad \forall \ l \notin (L^{RES}, l^{REN} \subseteq L
 *
 * The commodity balance constraint at the resource level is included in the `Equation RESOURCE_CONSTRAINT`_,
-* while at the renewable level, it is included in the `Equation RENEWABLES_EQUIVALENCE`_.
+* while at the renewable level, it is included in the `Equation RENEWABLES_EQUIVALENCE`_,
+* and at the storage level, it is included in the `Equation STORAGE_BALANCE`_.
 ***
 $macro COMMODITY_BALANCE(node,commodity,level,year,time) (                                                             \
     SUM( (location,tec,vintage,mode,time2)$( map_tec_act(location,tec,year,mode,time2)                                 \
@@ -615,7 +627,7 @@ $macro COMMODITY_BALANCE(node,commodity,level,year,time) (                      
 *
 ***
 COMMODITY_BALANCE_GT(node,commodity,level,year,time)$( map_commodity(node,commodity,level,year,time)
-        AND NOT level_resource(level) AND NOT level_renewable(level) )..
+        AND NOT level_resource(level) AND NOT level_renewable(level) AND NOT level_storage(level) )..
     COMMODITY_BALANCE(node,commodity,level,year,time)
 * relaxation of constraints for debugging
 %SLACK_COMMODITY_EQUIVALENCE% + SLACK_COMMODITY_EQUIVALENCE_UP(node,commodity,level,year,time)
@@ -633,7 +645,7 @@ COMMODITY_BALANCE_GT(node,commodity,level,year,time)$( map_commodity(node,commod
 *
 ***
 COMMODITY_BALANCE_LT(node,commodity,level,year,time)$( map_commodity(node,commodity,level,year,time)
-        AND NOT level_resource(level) AND NOT level_renewable(level)
+        AND NOT level_resource(level) AND NOT level_renewable(level) AND NOT level_storage(level)
         AND balance_equality(commodity,level) )..
     COMMODITY_BALANCE(node,commodity,level,year,time)
 * relaxation of constraints for debugging
@@ -2047,6 +2059,146 @@ RELATION_CONSTRAINT_LO(relation,node,year)$( is_relation_lower(relation,node,yea
     REL(relation,node,year)
 %SLACK_RELATION_BOUND_LO% + SLACK_RELATION_BOUND_LO(relation,node,year)
     =G= relation_lower(relation,node,year) ;
+
+*----------------------------------------------------------------------------------------------------------------------*
+***
+* .. _Storage section:
+*
+* Storage section
+* -------------------------------------------------
+*
+* Storage technologies can be used to store a commodity (e.g., water, heat, electricity, etc.)
+* and shift it over sub-annual time slices. The storage solution presented here has three
+* distinctive parts: (i) Charger: a technology for charging a commodity to the storage container,
+* for example, a pump in a pumped hydropower storage (PHS) plant. (ii) Discharger: a technology
+* to convert the stored commodity to the output commodity, e.g., a turbine in PHS.
+* (iii) Storage container: a device for storing a commodity over time, such as a water reservoir in PHS.
+*
+* .. figure:: /_static/storage.png
+*
+* Storage equations
+* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* The content of storage device depends on three factors: charge or discharge in
+* one time step (represented as STORAGE_CHANGE), the state of charge in the previous
+* time step, and storage losses between two consecutive time steps.
+*
+* Equation STORAGE_CHANGE
+* """""""""""""""""""""""""""""""
+* This equation shows the change in the content of the storage container in each
+* sub-annual time step. This change is based on the activity of charger and discharge
+* technologies connected to that storage container. The notation :math:`S^{storage}`
+* represents the mapping set `map_tec_storage_level` denoting charger-discharger
+* technologies connected to a specific storage container in a specific node and
+* storage level. Thus, :math:`t^{C}` is a charging technology and :math:`t^{D}` is the corresponding discharger.
+*   .. math::
+*      STORAGE\_CHG_{n,t^S,l,y,h} =
+*          \sum_{\substack{n^L,m,c,h^A \\ y^V \leq y, (n,t^C,t^S,l,y) \sim S^{storage}}} output_{n^L,t^C,y^V,y,m,n,c,l,h^A,h}
+*             \cdot & ACT_{n^L,t^C,y^V,y,m,h^A} \\
+*          - \sum_{\substack{n^L,m,c,h^A \\ y^V \leq y, (n,t^D,t^S,l,y) \sim S^{storage}}} input_{n^L,t^D,y^V,y,m,n,c,l,h^A,h}
+*             \cdot & ACT_{n^L,t^D,y^V,y,m,h^A} \\
+***
+STORAGE_CHANGE(node,storage_tec,level,year,time)$( SUM( (mode,tec,commodity),
+    map_tec_storage_level(node,tec,storage_tec,level,year,time) AND
+    (map_tec_charge(node,tec,mode,commodity,level,year,time) OR
+    map_tec_discharge(node,tec,mode,commodity,level,year,time) ) ) )..
+* change in the content of storage in the examined timestep
+    STORAGE_CHG(node,storage_tec,level,year,time) =E=
+* increase in the content of storage due to the activity of charging technologies
+        SUM( (location,vintage,mode,tec,commodity,time2)$(
+        map_tec_lifetime(node,tec,vintage,year) AND charge_tec(tec)
+        AND map_tec_storage_level(node,tec,storage_tec,level,year,time) ),
+            output(location,tec,vintage,year,mode,node,commodity,level,time2,time)
+            * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time) )
+* decrease in the content of storage due to the activity of discharging technologies
+        - SUM( (location,vintage,mode,tec,commodity,time2)$(
+        map_tec_lifetime(node,tec,vintage,year) AND discharge_tec(tec)
+        AND map_tec_storage_level(node,tec,storage_tec,level,year,time) ),
+            input(location,tec,vintage,year,mode,node,commodity,level,time2,time)
+            * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time) );
+
+***
+* Equation STORAGE_BALANCE
+* """""""""""""""""""""""""""""""
+*
+* This equation ensures the commodity balance of storage technologies,
+* where the commodity is shifted between sub-annual time steps within a model period.
+* Here, :math:`h^{A}` is the time step prior to :math:`h`.
+*   .. math::
+*      STORAGE_{n,t^S,l,y,h} \ = init\_storage_{n,t^S,l,y,h} + STORAGE\_CHG_{n,t^S,l,y,h} + \\
+*      STORAGE_{n,t^S,l,y,h^A} \cdot & (1 - storage\_loss_{n,t^S,l,y,h^A}) \\
+***
+STORAGE_BALANCE(node,storage_tec,level,year,time2)$ (
+    SUM(tec, map_tec_storage_level(node,tec,storage_tec,level,year,time2) )
+    AND NOT (SUM(lvl_temporal,time_seq(lvl_temporal,time2) ) = 1 ) )..
+* Showing the content of storage at each timestep
+    STORAGE(node,storage_tec,level,year,time2) =E=
+* initial content of storage and change in the content of storage in the examined timestep
+    init_storage(node,storage_tec,level,year,time2)
+    + STORAGE_CHG(node,storage_tec,level,year,time2)
+* storage content in the previous subannual timestep
+    + SUM((lvl_temporal,time)$map_time_period(year,lvl_temporal,time,time2),
+        STORAGE(node,storage_tec,level,year,time)
+* considering storage losses due to keeping the storage media between two subannual timesteps
+        * (1 - storage_loss(node,storage_tec,level,year,time) ) ) ;
+
+STORAGE_BALANCE_INIT(node,storage_tec,level,year,time)$ (
+    SUM(tec, map_tec_storage_level(node,tec,storage_tec,level,year,time) )
+    AND (SUM(lvl_temporal,time_seq(lvl_temporal,time) ) = 1 ) )..
+* Showing the content of storage at the first timestep
+    STORAGE(node,storage_tec,level,year,time) =E=
+* initial content of storage and change in the content of storage in the examined timestep
+    init_storage(node,storage_tec,level,year,time)
+    + STORAGE_CHG(node,storage_tec,level,year,time) ;
+
+***
+* Equation STORAGE_RELATION
+* """""""""""""""""""""""""""""""
+*
+* The content of storage in two sub-annual time steps, either in one period or in
+* two different periods, can be related together. This equation will be only active
+* if the input parameter `relation_storage` is defined by the user.
+*   .. math::
+*      STORAGE_{n,t^S,l,y^f,h^f} \leq relation\_storage_{n,t^S,l,y^f,y^l,h^f,h^l} \cdot & STORAGE_{n,t^S,l,y^l,h^l} \\
+***
+STORAGE_REL(node,storage_tec,level_storage,year,year2,time,time2)$(
+    relation_storage(node,storage_tec,level_storage,year,year2,time,time2) )..
+        STORAGE(node,storage_tec,level_storage,year,time) =L=
+        relation_storage(node,storage_tec,level_storage,year,year2,time,time2)
+        * STORAGE(node,storage_tec,level_storage,year2,time2);
+
+***
+* Equation STORAGE_BOUND_UP
+* """""""""""""""""""""""""""""""
+*
+* The upper bound on the content of storage can be defined as the percentage of installed
+* capacity of storage device.
+*   .. math::
+*      STORAGE_{n,t^S,l,y,h} \leq bound\_storage\_up_{n,t^S,l,y,h} \cdot & \\
+*      \sum_{\substack{y^V \leq y}} capacity\_factor_{n,t^S,y^V,y,h} \cdot CAP_{n,t^S,y^V,y}  \\
+***
+STORAGE_BOUND_UP(node,storage_tec,level,year,time)$(
+    bound_storage_up(node,storage_tec,level,year,time) )..
+        STORAGE(node,storage_tec,level,year,time) =L=
+        bound_storage_up(node,storage_tec,level,year,time)
+        * SUM(vintage, capacity_factor(node,storage_tec,vintage,year,time)
+            * CAP(node,storage_tec,vintage,year) ) ;
+
+***
+* Equation STORAGE_BOUND_LO
+* """""""""""""""""""""""""""""""
+*
+* The lower bound on the content of storage as the percentage of
+* installed capacity of storage device.
+*   .. math::
+*      STORAGE_{n,t^S,l,y,h} \geq bound\_storage\_lo_{n,t^S,l,y,h} \cdot & \\
+*      \sum_{\substack{y^V \leq y}} capacity\_factor_{n,t^S,y^V,y,h} \cdot CAP_{n,t^S,y^V,y}   \\
+***
+STORAGE_BOUND_LO(node,storage_tec,level,year,time)$(
+    bound_storage_lo(node,storage_tec,level,year,time) )..
+        STORAGE(node,storage_tec,level,year,time) =G=
+        bound_storage_lo(node,storage_tec,level,year,time)
+        * SUM(vintage, capacity_factor(node,storage_tec,vintage,year,time)
+            * CAP(node,storage_tec,vintage,year) ) ;
 
 *----------------------------------------------------------------------------------------------------------------------*
 * model statements                                                                                                     *

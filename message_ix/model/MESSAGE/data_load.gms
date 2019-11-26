@@ -18,6 +18,7 @@ $LOAD inv_tec, renewable_tec
 $LOAD balance_equality
 $LOAD shares
 $LOAD addon, type_addon, cat_addon, map_tec_addon
+$LOAD storage_tec, level_storage, map_tec_storage
 $GDXIN
 
 Execute_load '%in%'
@@ -69,6 +70,8 @@ demand_fixed=demand
 * fixing variables to pre-specified values
 is_fixed_extraction, is_fixed_stock, is_fixed_new_capacity, is_fixed_capacity, is_fixed_activity, is_fixed_land
 fixed_extraction, fixed_stock, fixed_new_capacity, fixed_capacity, fixed_activity, fixed_land
+* storage parameters
+init_storage, bound_storage_lo, bound_storage_up, storage_loss, relation_storage, time_seq
 * BZ added
 relation_activity_time, relation_upper_time, relation_lower_time, emission_factor_time
 ;
@@ -160,6 +163,28 @@ addon_up(node,tec,year_all,mode,time,type_addon)$(
 * set the emission scaling parameter to 1 if only one emission is included in a category
 emission_scaling(type_emission,emission)$( cat_emission(type_emission,emission)
         and not emission_scaling(type_emission,emission) ) = 1 ;
+
+* mapping of charging technologies to their level and commodity
+map_tec_charge(node,tec,mode,commodity,level_storage,year_all,time)$( Not storage_tec(tec) AND
+    SUM((node2,year_all2,time_act),
+        output(node2,tec,year_all,year_all2,mode,node,commodity,level_storage,time_act,time) ) ) = yes;
+
+charge_tec(tec)$(
+     SUM((node,mode,commodity,level_storage,year_all,time), map_tec_charge(node,tec,mode,commodity,level_storage,year_all,time) ) ) = yes;
+
+* mapping of discharge technologies to their level and commodity
+map_tec_discharge(node,tec,mode,commodity,level_storage,year_all,time)$( Not storage_tec(tec) AND
+    SUM((node2,year_all2,time_act),
+        input(node2,tec,year_all,year_all2,mode,node,commodity,level_storage,time_act,time) ) ) = yes;
+discharge_tec(tec)$(
+     SUM((node,mode,commodity,level_storage,year_all,time), map_tec_discharge(node,tec,mode,commodity,level_storage,year_all,time) ) ) = yes;
+
+* mapping of storage reservoir technologies to their levels and charge/discharge technologies
+map_tec_storage_level(node,tec,storage_tec,level_storage,year_all,time)$(map_tec_storage(tec, storage_tec) AND
+     ( SUM((node2,year_all2,mode,commodity,time_act),
+        input(node2,tec,year_all,year_all2,mode,node,commodity,level_storage,time_act,time) ) OR
+     SUM((node2,year_all2,mode,commodity,time_act),
+        output(node2,tec,year_all,year_all2,mode,node,commodity,level_storage,time_act,time) ) ) ) = yes;
 
 *----------------------------------------------------------------------------------------------------------------------*
 * sanity checks on the data set                                                                                        *

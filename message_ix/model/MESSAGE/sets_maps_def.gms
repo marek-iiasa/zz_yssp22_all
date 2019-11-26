@@ -144,6 +144,7 @@ Alias(year_all,year_all3);
 Alias(year,year2);
 Alias(year,year3);
 Alias(time,time2);
+Alias(time,time3);
 Alias(time,time_act);
 Alias(time,time_od);
 Alias(mode, mode2);
@@ -153,6 +154,9 @@ Alias(mode, mode2);
 *----------------------------------------------------------------------------------------------------------------------*
 
 ***
+*
+* .. _mapping-sets:
+*
 * Category types and mappings
 * ---------------------------
 *
@@ -374,4 +378,20 @@ Sets
     is_fixed_capacity(node,tec,vintage,year_all)           flag whether maintained capacity variable is fixed
     is_fixed_activity(node,tec,vintage,year_all,mode,time) flag whether activity variable is fixed
     is_fixed_land(node,land_scenario,year_all)             flag whether land level is fixed
+;
+
+*----------------------------------------------------------------------------------------------------------------------*
+* Storage sets and mappings                                                                             *
+*----------------------------------------------------------------------------------------------------------------------*
+
+Sets
+    level_storage(level)                                               levels of storage
+    map_tec_charge(node,tec,mode,commodity,level,year_all,time)        mapping of charging technologies (for storage) to their commodities
+    map_tec_discharge(node,tec,mode,commodity,level,year_all,time)     mapping of discharging technologies (for storage) to their commodities
+    map_tec_storage(tec,tec2)                                          mapping of charge and discharging technologies (for storage) to their respective storage container
+    map_tec_storage_level(node,tec,tec2,level,year_all,time)           mapping of storage container to its level and charge-discharge technologies
+    storage_tec(tec)                                                   storage container technologies
+    charge_tec(tec)                                                    charging technologies (for storage)
+    discharge_tec(tec)                                                 discharging technologies (for storage)
+
 ;
