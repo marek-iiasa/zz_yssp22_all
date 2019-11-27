@@ -289,7 +289,7 @@ class Calculate(object):
         model_cost = model_cost[idx + ['value']]
         # TODO: in the R code, this value is divided by 1000
         # do we need to do that here?!!?
-        model_cost['value'] /= 1e3
+        # model_cost['value'] /= 1e3
         # get data provided in init year from data
         cost_ref = self.data['cost_ref'].reset_index()
         cost_ref['year'] = self.init_year

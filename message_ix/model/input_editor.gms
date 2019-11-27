@@ -23,9 +23,13 @@
 *bound_emission('World','TCE','all','cumulative') =3630;
 *bound_new_capacity_lo('R14_NAM', 'gas_cc', '2025') = 0;
 *initial_new_capacity_up('R11_SAS', 'hydro_hc', '2020') = 0.25;
-*bound_total_capacity_lo('R14_NAM', 'LNG_exp', '2030') = 0;
+*growth_new_capacity_lo('R11_SAS', 'coal_ppl', year_all) = -0.3;
+*initial_new_capacity_lo('R11_SAS', 'coal_ppl', year_all) = 0.5;
+*bound_total_capacity_up('R11_SAS', 'coal_ppl', '2060') = 0.5;
+*bound_total_capacity_up('R11_SAS', 'coal_ppl', '2055') = 0.5;
 *relation_activity('UE_industry_th_gas', 'R14_NAM', year_all, 'R14_NAM', 'useful_industry_th', year_all, 'M1') = -0.1;
 *relation_activity('UE_feedstock_gas', 'R14_NAM', year_all, 'R14_NAM', 'useful_feedstock', year_all, 'M1') = -0.1;
+*demand_fixed('R11_SAS', 'non-comm', 'useful', year_all, time) = 0;
 
 
 
