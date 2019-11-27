@@ -2162,7 +2162,7 @@ STORAGE_BALANCE_INIT(node,storage_tec,level,year,time)$ (
 ***
 STORAGE_REL(node,storage_tec,level_storage,year,year2,time,time2)$(
     relation_storage(node,storage_tec,level_storage,year,year2,time,time2) )..
-        STORAGE(node,storage_tec,level_storage,year,time) =L=
+        STORAGE(node,storage_tec,level_storage,year,time) =G=
         relation_storage(node,storage_tec,level_storage,year,year2,time,time2)
         * STORAGE(node,storage_tec,level_storage,year2,time2);
 
