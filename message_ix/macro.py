@@ -107,6 +107,7 @@ MACRO_INIT = {
         'YN': ['node', 'year', ],
         'EC': ['node', 'year', ],
         'UTILITY': None,
+        'N_ITER': None,
         'PHYSENE': ['node', 'sector', 'year', ],
         'PRODENE': ['node', 'sector', 'year', ],
         'NEWENE': ['node', 'sector', 'year', ],
@@ -406,7 +407,7 @@ def init(s):
             pass
 
     # keep track of number of iterations
-    s.init_var('N_ITER', None)
+    # s.init_var('N_ITER', None)
     s.init_var('MAX_ITER', None)
 
 

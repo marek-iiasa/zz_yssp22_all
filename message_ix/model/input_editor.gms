@@ -21,7 +21,12 @@
 *historical_activity('R14_NAM', 'LNG_prod', '2015','M1', time) = 47;
 *output('R14_CAS', 'elec_exp', year_all, year_all, 'M1', 'R14_CAS', 'electr', level, time, time) = 0;
 *bound_emission('World','TCE','all','cumulative') =3630;
-*bound_new_capacity_lo('R14_NAM', 'gas_cc', '2025') = 0;
+*bound_new_capacity_up('R14_SAS', 'gas_hpl', '2070') = 3.7;
+*bound_new_capacity_up('R14_SAS', 'gas_hpl', '2080') = 1.7;
+*bound_new_capacity_up('R14_SAS', 'bio_hpl', '2090') = 3.1;
+*bound_new_capacity_up('R14_SAS', 'bio_hpl', '2100') = 4.2;
+*bound_new_capacity_up('R14_SAS', 'bio_hpl', '2110') = 1.95;
+*bound_new_capacity_up('R14_SAS', 'hydro_lc', '2070') = 0.7;
 *initial_new_capacity_up('R11_SAS', 'hydro_hc', '2020') = 0.25;
 *growth_new_capacity_lo('R11_SAS', 'coal_ppl', year_all) = -0.3;
 *initial_new_capacity_lo('R11_SAS', 'coal_ppl', year_all) = 0.5;
