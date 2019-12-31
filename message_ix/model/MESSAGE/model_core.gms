@@ -316,6 +316,7 @@ Equations
     STORAGE_BALANCE                 balance of the content of storage
     STORAGE_BALANCE_INIT            balance of the content of storage at the first time step
     STORAGE_REL                     relation between the content of storage in two different time steps (content in time_first * value = content in time_last)
+    STORAGE_REL_INIT                relation between the content of storage in one time step relative to initial content of another time step (content in time_first * value = initial content in time_last)
     STORAGE_BOUND_LO                lower bound of the content of storage
     STORAGE_BOUND_UP                upper bound of the content of storage
 * BZ added
@@ -2128,28 +2129,32 @@ STORAGE_CHANGE(node,storage_tec,level,year,time)$( SUM( (mode,tec,commodity),
 *      STORAGE_{n,t^S,l,y,h^A} \cdot & (1 - storage\_loss_{n,t^S,l,y,h^A}) \\
 ***
 STORAGE_BALANCE(node,storage_tec,level,year,time2)$ (
-    SUM(tec, map_tec_storage_level(node,tec,storage_tec,level,year,time2) )
-    AND NOT (SUM(lvl_temporal,time_seq(lvl_temporal,time2) ) = 1 ) )..
+    SUM(tec, map_tec_storage_level(node,tec,storage_tec,level,year,time2)
+    AND NOT init_storage(node,storage_tec,level,year,time2) )
+*    AND NOT (SUM(lvl_temporal,time_seq(lvl_temporal,time2) ) = 1 )
+     )..
 * Showing the content of storage at each timestep
     STORAGE(node,storage_tec,level,year,time2) =E=
 * initial content of storage and change in the content of storage in the examined timestep
-    init_storage(node,storage_tec,level,year,time2)
+*    init_storage(node,storage_tec,level,year,time2)
     + STORAGE_CHG(node,storage_tec,level,year,time2)
 * storage content in the previous subannual timestep
     + SUM((lvl_temporal,time)$map_time_period(year,lvl_temporal,time,time2),
         STORAGE(node,storage_tec,level,year,time)
 * considering storage losses due to keeping the storage media between two subannual timesteps
         * (1 - storage_loss(node,storage_tec,level,year,time) ) ) ;
-
+*$ontext
 STORAGE_BALANCE_INIT(node,storage_tec,level,year,time)$ (
     SUM(tec, map_tec_storage_level(node,tec,storage_tec,level,year,time) )
-    AND (SUM(lvl_temporal,time_seq(lvl_temporal,time) ) = 1 ) )..
+*    AND (SUM(lvl_temporal,time_seq(lvl_temporal,time) ) = 1 )
+    AND init_storage(node,storage_tec,level,year,time)
+     )..
 * Showing the content of storage at the first timestep
     STORAGE(node,storage_tec,level,year,time) =E=
 * initial content of storage and change in the content of storage in the examined timestep
     init_storage(node,storage_tec,level,year,time)
     + STORAGE_CHG(node,storage_tec,level,year,time) ;
-
+*$offtext
 ***
 * Equation STORAGE_RELATION
 * """""""""""""""""""""""""""""""
@@ -2161,11 +2166,18 @@ STORAGE_BALANCE_INIT(node,storage_tec,level,year,time)$ (
 *      STORAGE_{n,t^S,l,y^f,h^f} \leq relation\_storage_{n,t^S,l,y^f,y^l,h^f,h^l} \cdot & STORAGE_{n,t^S,l,y^l,h^l} \\
 ***
 STORAGE_REL(node,storage_tec,level_storage,year,year2,time,time2)$(
-    relation_storage(node,storage_tec,level_storage,year,year2,time,time2) )..
+    relation_storage(node,storage_tec,level_storage,year,year2,time,time2)
+    AND NOT init_storage(node,storage_tec,level_storage,year2,time2) )..
         STORAGE(node,storage_tec,level_storage,year,time) =G=
         relation_storage(node,storage_tec,level_storage,year,year2,time,time2)
         * STORAGE(node,storage_tec,level_storage,year2,time2);
 
+STORAGE_REL_INIT(node,storage_tec,level_storage,year,year2,time,time2)$(
+    relation_storage(node,storage_tec,level_storage,year,year2,time,time2)
+    AND init_storage(node,storage_tec,level_storage,year2,time2) )..
+        STORAGE(node,storage_tec,level_storage,year,time) =G=
+        relation_storage(node,storage_tec,level_storage,year,year2,time,time2)
+        * init_storage(node,storage_tec,level_storage,year2,time2);
 ***
 * Equation STORAGE_BOUND_UP
 * """""""""""""""""""""""""""""""

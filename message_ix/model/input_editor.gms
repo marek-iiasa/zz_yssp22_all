@@ -25,6 +25,8 @@
 *bound_total_capacity_lo('R14_NAM', 'LNG_exp', '2030') = 0;
 *relation_activity('UE_industry_th_gas', 'R14_NAM', year_all, 'R14_NAM', 'useful_industry_th', year_all, 'M1') = -0.1;
 *relation_activity('UE_feedstock_gas', 'R14_NAM', year_all, 'R14_NAM', 'useful_feedstock', year_all, 'M1') = -0.1;
+*init_storage(node,'hydro_pump',level,year_all,'1') = 0;
+init_storage('TAJ','hydro_dam',level,year_all,'1') = 1;
 
 
 
