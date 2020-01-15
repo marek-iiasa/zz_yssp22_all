@@ -2209,5 +2209,5 @@ STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,level_storage,commodity2,mo
 Model MESSAGE_LP / all / ;
 
 MESSAGE_LP.holdfixed = 1 ;
-MESSAGE_LP.optfile = 1 ;
+MESSAGE_LP.optfile = 2 ;
 MESSAGE_LP.optcr = 0 ;
