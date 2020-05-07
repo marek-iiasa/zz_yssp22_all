@@ -113,6 +113,8 @@ Variables
     EMISS(node,emission,type_tec,year_all)       aggregate emissions by technology type and land-use model emulator
 * auxiliary variable for left-hand side of relations (linear constraints)
     REL(relation,node,year_all)                  auxiliary variable for left-hand side of user-defined relations
+* time-related auxiliary variable for left-hand side of relations (linear constraints)
+    REL_TIME(relation,node,year_all,time)                  auxiliary variable for left-hand side of user-defined relations
 * change in the content of storage device
     STORAGE_CHARGE(node,tec,level,commodity,year_all,time)    charging of storage in each timestep (negative for discharge)
 ;
@@ -212,6 +214,8 @@ Positive variables
     SLACK_LAND_TYPE_LO(node,year_all,land_type)       slack variable for dynamic land type constraint relaxation (downwards)
     SLACK_RELATION_BOUND_UP(relation,node,year_all)   slack variable for upper bound of generic relation
     SLACK_RELATION_BOUND_LO(relation,node,year_all)   slack variable for lower bound of generic relation
+    SLACK_RELATION_BOUND_UP_TIME(relation,node,year_all,time)   slack variable for upper bound of generic relation with subannual timestep
+    SLACK_RELATION_BOUND_LO_TIME(relation,node,year_all,time)   slack variable for lower bound of generic relation with subannual timestep
 ;
 
 *----------------------------------------------------------------------------------------------------------------------*
@@ -279,6 +283,12 @@ Equations
     STORAGE_BALANCE                 balance of the state of charge of storage
     STORAGE_BALANCE_INIT            balance of the state of charge of storage at sub-annual time steps with initial storage content
     STORAGE_EQUIVALENCE             mapping state of storage as activity of storage technologies
+* BZ added
+*    EMISSION_EQUIVALENCE_TIME       time dependentauxiliary equation to simplify the notation of emissions
+    RELATION_EQUIVALENCE_TIME       time dependent auxiliary equation to simplify the implementation of relations
+    RELATION_EQUIVALENCE_YEAR       time dependent auxiliary equation to simplify the implementation of relations at year level
+    RELATION_CONSTRAINT_UP_TIME     time dependentupper bound of relations (linear constraints)
+    RELATION_CONSTRAINT_LO_TIME     time dependent lower bound of relations (linear constraints)
 ;
 *----------------------------------------------------------------------------------------------------------------------*
 * equation statements                                                                                                  *
@@ -390,12 +400,31 @@ COST_ACCOUNTING_NODAL(node, year)..
         emission_scaling(type_emission,emission)
         * tax_emission(node,type_emission,type_tec,type_year)
         * EMISS(node,emission,type_tec,year) )
+*######################################################################################
+* BZ added
+$ontext
+* emission taxes (by parent node, type of technology, type of year and type of emission)
+    + SUM((type_emission,emission,type_tec,type_year)$( emission_scaling(type_emission,emission)
+            AND cat_year(type_year,year) ),
+        emission_scaling(type_emission,emission)
+        * tax_emission(node,type_emission,type_tec,type_year)
+        * SUM(time, EMISS_TIME(node,emission,type_tec,year,time) ) )
+$offtext
+
 * cost terms from land-use model emulator (only includes valid node-land_scenario-year combinations)
     + SUM(land_scenario$( land_cost(node,land_scenario,year) ),
         land_cost(node,land_scenario,year) * LAND(node,land_scenario,year) )
 * cost terms associated with linear relations
+$ontext
     + SUM(relation$( relation_cost(relation,node,year) ),
         relation_cost(relation,node,year) * REL(relation,node,year) )
+$offtext
+*######################################################################################
+* BZ added
+* cost terms associated with linear relations on sub-annual timestep level
+    + SUM( (relation) $( relation_cost(relation,node,year)  ),
+        relation_cost(relation,node,year)  )
+* sum(time, REL_TIME(relation,node,year,time ) )
 * implementation of slack variables for constraints to aid in debugging
     + SUM((commodity,level,time)$( map_commodity(node,commodity,level,year,time) ), ( 0
 %SLACK_COMMODITY_EQUIVALENCE%   + SLACK_COMMODITY_EQUIVALENCE_UP(node,commodity,level,year,time)
@@ -428,6 +457,10 @@ COST_ACCOUNTING_NODAL(node, year)..
     + SUM((relation), 0
 %SLACK_RELATION_BOUND_UP% + 1e6 * SLACK_RELATION_BOUND_UP(relation,node,year)$( is_relation_upper(relation,node,year) )
 %SLACK_RELATION_BOUND_LO% + 1e6 * SLACK_RELATION_BOUND_LO(relation,node,year)$( is_relation_lower(relation,node,year) )
+        )
+    + SUM((relation,time), 0
+%SLACK_RELATION_BOUND_UP_TIME% + 1e6 * SLACK_RELATION_BOUND_UP_TIME(relation,node,year,time)
+%SLACK_RELATION_BOUND_LO_TIME% + 1e6 * SLACK_RELATION_BOUND_LO_TIME(relation,node,year,time)
         )
 ;
 
@@ -544,14 +577,14 @@ RESOURCE_HORIZON(node,commodity,grade)$( SUM(year$map_resource(node,commodity,gr
 * and at the storage level, it is included in the `Equation STORAGE_BALANCE`_.
 ***
 $macro COMMODITY_BALANCE(node,commodity,level,year,time) (                                                             \
-    SUM( (location,tec,vintage,mode,time2)$( map_tec_act(location,tec,year,mode,time2)                                 \
+    SUM( (location,tec,vintage,mode,time2,time3)$( map_tec_act(location,tec,year,mode,time2)                                 \
             AND map_tec_lifetime(location,tec,vintage,year) ),                                                         \
 * import into node and output by all technologies located at 'location' sending to 'node' and 'time2' sending to 'time'
         output(location,tec,vintage,year,mode,node,commodity,level,time2,time)                                         \
         * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time2)                                    \
 * export from node and input into technologies located at 'location' taking from 'node' and 'time2' taking from 'time'
-        - input(location,tec,vintage,year,mode,node,commodity,level,time2,time)                                        \
-        * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time2) )                                  \
+        - input(location,tec,vintage,year,mode,node,commodity,level,time3,time)                                        \
+        * duration_time_rel(time,time3) * ACT(location,tec,vintage,year,mode,time3) )                                  \
 * quantity taken out from ( >0 ) or put into ( <0 ) inter-period stock (storage)
     + STOCK_CHG(node,commodity,level,year,time)$( map_stocks(node,commodity,level,year) )                              \
 * yield from land-use model emulator
@@ -1931,7 +1964,7 @@ DYNAMIC_LAND_TYPE_CONSTRAINT_LO(node,year,land_type)$( is_dynamic_land_lo(node,y
 * The parameter :math:`historical\_new\_capacity_{r,n,y}` is not included here, because relations can only be active
 * in periods included in the model horizon and there is no "writing" of capacity relation factors across periods.
 ***
-
+*$ontext
 RELATION_EQUIVALENCE(relation,node,year)..
     REL(relation,node,year)
         =E=
@@ -1972,7 +2005,52 @@ RELATION_CONSTRAINT_LO(relation,node,year)$( is_relation_lower(relation,node,yea
     REL(relation,node,year)
 %SLACK_RELATION_BOUND_LO% + SLACK_RELATION_BOUND_LO(relation,node,year)
     =G= relation_lower(relation,node,year) ;
+*$offtext
+*##############################################################################################
+* BZ added: relation_activity for time
+RELATION_EQUIVALENCE_TIME(relation,node,year,time)$( map_relation_time(relation,node,year,time) )..
+    REL_TIME(relation,node,year,time)
+        =E=
+        SUM(tec,
+        ( relation_new_capacity(relation,node,year,tec) * CAP_NEW(node,tec,year)
+          + relation_total_capacity(relation,node,year,tec)
+            * SUM(vintage$( map_tec_lifetime(node,tec,vintage,year) ), CAP(node,tec,vintage,year) )
+          )$( inv_tec(tec) )
+        + SUM( (location,year_all2,mode)$( map_relation_time(relation,location,year_all2,time) ),
+            relation_activity_time(relation,node,year,location,tec,year_all2,mode,time)
+            * ( SUM(vintage$( map_tec_lifetime(location,tec,vintage,year_all2) ),
+                  ACT(location,tec,vintage,year_all2,mode,time) )
+                  + historical_activity(location,tec,year_all2,mode,time) )
+          )
+      ) ;
 
+RELATION_EQUIVALENCE_YEAR(relation,node,year)$( sum (time, map_relation_year(relation,node,year,time) ) )..
+    REL_TIME(relation,node,year,'year')
+        =E=
+        SUM(tec,
+        ( relation_new_capacity(relation,node,year,tec) * CAP_NEW(node,tec,year)
+          + relation_total_capacity(relation,node,year,tec)
+            * SUM(vintage$( map_tec_lifetime(node,tec,vintage,year) ), CAP(node,tec,vintage,year) )
+          )$( inv_tec(tec) )
+        + SUM( (location,year_all2,mode,time)$( map_relation_year(relation,location,year_all2,time) ),
+            relation_activity_time(relation,node,year,location,tec,year_all2,mode,time)
+            * ( SUM(vintage$( map_tec_lifetime(location,tec,vintage,year_all2) ),
+                  ACT(location,tec,vintage,year_all2,mode,time) )
+                  + historical_activity(location,tec,year_all2,mode,time) )
+          )
+      ) ;
+
+RELATION_CONSTRAINT_UP_TIME(relation,node,year,time)$( relation_upper_time(relation,node,year,time) )..
+    REL_TIME(relation,node,year,time)
+%SLACK_RELATION_BOUND_UP_TIME% - SLACK_RELATION_BOUND_UP_TIME(relation,node,year,time)
+    =L= relation_upper_time(relation,node,year,time) ;
+
+RELATION_CONSTRAINT_LO_TIME(relation,node,year,time) ..
+    REL_TIME(relation,node,year,time)
+%SLACK_RELATION_BOUND_LO_TIME% - SLACK_RELATION_BOUND_LO_TIME(relation,node,year,time)
+    =G= relation_lower_time(relation,node,year,time) ;
+
+*##############################################################################################
 *----------------------------------------------------------------------------------------------------------------------*
 ***
 * .. _gams-storage:
