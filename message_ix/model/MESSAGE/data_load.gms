@@ -72,6 +72,8 @@ is_fixed_extraction, is_fixed_stock, is_fixed_new_capacity, is_fixed_capacity, i
 fixed_extraction, fixed_stock, fixed_new_capacity, fixed_capacity, fixed_activity, fixed_land
 * storage parameters
 storage_initial, storage_self_discharge, time_order
+* BZ added
+relation_activity_time, relation_upper_time, relation_lower_time
 ;
 
 
@@ -172,6 +174,18 @@ map_time_period(year_all,lvl_temporal,time,time2)$( time_order(lvl_temporal,time
 * mapping of sequence of the last sub-annual timestep to the first to create a close the order of timesteps
 map_time_period(year_all,lvl_temporal,time,time2)$( time_order(lvl_temporal,time) AND
      time_order(lvl_temporal,time) = SMAX(time3,time_order(lvl_temporal,time3) ) AND time_order(lvl_temporal,time2) = 1 ) = yes;
+
+* mapping of relations that should be accounted at subannual timesteps
+map_relation_year(relation,node,year_all,time)$(
+    SUM( (node2,year_all2,tec,mode), relation_activity_time(relation,node,year_all,node2,tec,year_all2,mode,time)
+    ) AND ( duration_time(time) = 1 )  ) = yes;
+
+relation_year(relation)$( SUM( (node,year_all,time), map_relation_year(relation,node,year_all,time) ) ) = yes;
+
+* mapping of relations that should be accounted at subannual timesteps
+map_relation_time(relation,node,year_all,time)$(
+    SUM( (node2,year_all2,tec,mode), relation_activity_time(relation,node,year_all,node2,tec,year_all2,mode,time)
+    ) AND NOT relation_year(relation) ) = yes;  
 *----------------------------------------------------------------------------------------------------------------------*
 * sanity checks on the data set                                                                                        *
 *----------------------------------------------------------------------------------------------------------------------*
@@ -202,7 +216,7 @@ if (check,
 loop(lvl_temporal,
     loop(time2$( sum(time, map_temporal_hierarchy(lvl_temporal,time,time2) ) ),
         check = 1$( sum( time$( map_temporal_hierarchy(lvl_temporal,time,time2) ),
-            duration_time(time) ) ne duration_time(time2) ) ;
+            duration_time(time) ) > (duration_time(time2) + 0.02 )) ;
     ) ;
 ) ;
 if (check,

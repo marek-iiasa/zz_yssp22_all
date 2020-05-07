@@ -25,12 +25,14 @@ report_aux_bounds_lo(node,tec,year_all,year_all2,mode,time)$(
     map_tec_lifetime(node,tec,year_all,year_all2) AND map_tec_act(node,tec,year_all2,mode,time)
     AND ( ACT.l(node,tec,year_all,year_all2,mode,time) = -%AUX_BOUND_VALUE% ) ) = yes ;
 
-
 Parameter
+
     report_new_capacity(*,*,*)
     report_total_capacity(*,*,*)
     report_activity(*,*,*,*)
 ;
+
+** do simple time series reports on new capacity and activity **
 
 * write the 'new capacity' into a specific reporting parameter
 report_new_capacity(node,inv_tec,historical) =
@@ -57,3 +59,4 @@ report_activity(node,tec,historical,"actual")$( map_tec(node,tec,historical) ) =
 report_activity(node,tec,year,"actual")$( map_tec(node,tec,year) ) =
     sum((location,vintage,mode,time)$( map_node(node,location) ),
         ACT.l(location,tec,vintage,year,mode,time) ) ;
+
