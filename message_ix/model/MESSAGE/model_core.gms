@@ -577,14 +577,13 @@ RESOURCE_HORIZON(node,commodity,grade)$( SUM(year$map_resource(node,commodity,gr
 * and at the storage level, it is included in the `Equation STORAGE_BALANCE`_.
 ***
 $macro COMMODITY_BALANCE(node,commodity,level,year,time) (                                                             \
-    SUM( (location,tec,vintage,mode,time2,time3)$( map_tec_act(location,tec,year,mode,time2)                                 \
-            AND map_tec_lifetime(location,tec,vintage,year) ),                                                         \
+    SUM( (location,tec,vintage,mode)$(map_tec_lifetime(location,tec,vintage,year) ),                                                         \
 * import into node and output by all technologies located at 'location' sending to 'node' and 'time2' sending to 'time'
-        output(location,tec,vintage,year,mode,node,commodity,level,time2,time)                                         \
-        * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time2)                                    \
+        SUM(time2, map_tec_act(location,tec,year,mode,time2)$output(location,tec,vintage,year,mode,node,commodity,level,time2,time)                                         \
+        * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time2) )                                   \
 * export from node and input into technologies located at 'location' taking from 'node' and 'time2' taking from 'time'
-        - input(location,tec,vintage,year,mode,node,commodity,level,time3,time)                                        \
-        * duration_time_rel(time,time3) * ACT(location,tec,vintage,year,mode,time3) )                                  \
+        - SUM( time3, map_tec_act(location,tec,year,mode,time3)$input(location,tec,vintage,year,mode,node,commodity,level,time3,time)                                         \
+        * duration_time_rel(time,time3) * ACT(location,tec,vintage,year,mode,time3) ) )                                  \
 * quantity taken out from ( >0 ) or put into ( <0 ) inter-period stock (storage)
     + STOCK_CHG(node,commodity,level,year,time)$( map_stocks(node,commodity,level,year) )                              \
 * yield from land-use model emulator
