@@ -106,8 +106,8 @@ rating_unrated('unrated') = no ;
 $INCLUDE includes/period_parameter_assignment.gms
 
 * compute auxiliary parameters for relative duration of subannual time periods
+*duration_time_rel(time,time2)$( map_time(time,time2) ) = duration_time(time2) / duration_time(time) ;
 duration_time_rel(time,time2)$( map_time(time,time2) ) = duration_time(time2) / duration_time(time) ;
-
 * assign an additional mapping set for technologies to nodes, modes and subannual time slices (for shorter reference)
 map_tec_act(node,tec,year_all,mode,time)$( map_tec_time(node,tec,year_all,time) AND
    map_tec_mode(node,tec,year_all,mode) ) = yes ;
@@ -185,7 +185,7 @@ relation_year(relation)$( SUM( (node,year_all,time), map_relation_year(relation,
 * mapping of relations that should be accounted at subannual timesteps
 map_relation_time(relation,node,year_all,time)$(
     SUM( (node2,year_all2,tec,mode), relation_activity_time(relation,node,year_all,node2,tec,year_all2,mode,time)
-    ) AND NOT relation_year(relation) ) = yes;  
+    ) AND NOT relation_year(relation) ) = yes;
 *----------------------------------------------------------------------------------------------------------------------*
 * sanity checks on the data set                                                                                        *
 *----------------------------------------------------------------------------------------------------------------------*
