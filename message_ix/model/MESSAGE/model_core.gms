@@ -434,9 +434,10 @@ $offtext
 *######################################################################################
 * BZ added
 * cost terms associated with linear relations on sub-annual timestep level
-    + SUM(relation$( relation_cost(relation,node,year) ),
-        relation_cost(relation,node,year) * sum(time, REL_TIME(relation,node,year,time ) ) )
-* sum(time, REL_TIME(relation,node,year,time ) )
+    + SUM((relation,time)$( relation_cost(relation,node,year) AND
+          (map_relation_time(relation,node,year,time) OR map_relation_year(relation,node,year,time) ) ),
+        relation_cost(relation,node,year) * REL_TIME(relation,node,year,time ) )
+
 * implementation of slack variables for constraints to aid in debugging
     + SUM((commodity,level,time)$( map_commodity(node,commodity,level,year,time) ), ( 0
 %SLACK_COMMODITY_EQUIVALENCE%   + SLACK_COMMODITY_EQUIVALENCE_UP(node,commodity,level,year,time)
@@ -2167,7 +2168,7 @@ RELATION_CONSTRAINT_UP_TIME(relation,node,year,time)$( relation_upper_time(relat
 %SLACK_RELATION_BOUND_UP_TIME% - SLACK_RELATION_BOUND_UP_TIME(relation,node,year,time)
     =L= relation_upper_time(relation,node,year,time) ;
 
-RELATION_CONSTRAINT_LO_TIME(relation,node,year,time) ..
+RELATION_CONSTRAINT_LO_TIME(relation,node,year,time)$( relation_lower_time(relation,node,year,time) ) ..
     REL_TIME(relation,node,year,time)
 %SLACK_RELATION_BOUND_LO_TIME% + SLACK_RELATION_BOUND_LO_TIME(relation,node,year,time)
     =G= relation_lower_time(relation,node,year,time) ;
