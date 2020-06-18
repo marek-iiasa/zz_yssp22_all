@@ -2155,7 +2155,7 @@ RELATION_EQUIVALENCE_YEAR(relation,node,year)$( sum (time, map_relation_year(rel
           + relation_total_capacity(relation,node,year,tec)
             * SUM(vintage$( map_tec_lifetime(node,tec,vintage,year) ), CAP(node,tec,vintage,year) )
           )$( inv_tec(tec) )
-        + SUM( (location,year_all2,mode,time)$( map_relation_year(relation,location,year_all2,time) ),
+        + SUM( (location,year_all2,mode,time) ,
             relation_activity_time(relation,node,year,location,tec,year_all2,mode,time)
             * ( SUM(vintage$( map_tec_lifetime(location,tec,vintage,year_all2) ),
                   ACT(location,tec,vintage,year_all2,mode,time) )
@@ -2163,12 +2163,12 @@ RELATION_EQUIVALENCE_YEAR(relation,node,year)$( sum (time, map_relation_year(rel
           )
       ) ;
 
-RELATION_CONSTRAINT_UP_TIME(relation,node,year,time)$( relation_upper_time(relation,node,year,time) )..
+RELATION_CONSTRAINT_UP_TIME(relation,node,year,time)$( is_relation_upper_time(relation,node,year,time) )..
     REL_TIME(relation,node,year,time)
 %SLACK_RELATION_BOUND_UP_TIME% - SLACK_RELATION_BOUND_UP_TIME(relation,node,year,time)
     =L= relation_upper_time(relation,node,year,time) ;
 
-RELATION_CONSTRAINT_LO_TIME(relation,node,year,time)$( relation_lower_time(relation,node,year,time) ) ..
+RELATION_CONSTRAINT_LO_TIME(relation,node,year,time)$( is_relation_lower_time(relation,node,year,time) )..
     REL_TIME(relation,node,year,time)
 %SLACK_RELATION_BOUND_LO_TIME% + SLACK_RELATION_BOUND_LO_TIME(relation,node,year,time)
     =G= relation_lower_time(relation,node,year,time) ;
