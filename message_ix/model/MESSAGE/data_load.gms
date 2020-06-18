@@ -106,8 +106,19 @@ rating_unrated('unrated') = no ;
 $INCLUDE includes/period_parameter_assignment.gms
 
 * compute auxiliary parameters for relative duration of subannual time periods
-*duration_time_rel(time,time2)$( map_time(time,time2) ) = duration_time(time2) / duration_time(time) ;
 duration_time_rel(time,time2)$( map_time(time,time2) ) = duration_time(time2) / duration_time(time) ;
+
+*BZ------------------------------------------------------------------------------------------------------------------------
+*Adding new parameters to mappings if missing (specially if mapping made in backend)
+* mapping of technologies to node and year
+* map_tec_relation is needed, because some relations like CO2_Emissions will be zero if sum over relations at once (-1 + 1 = 0)
+map_tec_relation(node,relation,tec,year_all,mode,time)$(sum( (node2,year_all2),
+    relation_activity_time(relation,node2,year_all,node,tec,year_all2,mode,time) ) ) = yes;
+
+map_tec(node,tec,year_all)$(sum( (relation,mode,time), map_tec_relation(node,relation,tec,year_all,mode,time) ) ) = yes;
+map_tec_mode(node,tec,year_all,mode)$(sum( (relation,time), map_tec_relation(node,relation,tec,year_all,mode,time) ) ) = yes;
+map_tec_time(node,tec,year_all,time)$(sum( (relation,mode), map_tec_relation(node,relation,tec,year_all,mode,time) ) ) = yes;
+*------------------------------------------------------------------------------------------------------------------
 * assign an additional mapping set for technologies to nodes, modes and subannual time slices (for shorter reference)
 map_tec_act(node,tec,year_all,mode,time)$( map_tec_time(node,tec,year_all,time) AND
    map_tec_mode(node,tec,year_all,mode) ) = yes ;

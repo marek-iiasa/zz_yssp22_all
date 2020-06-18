@@ -467,6 +467,7 @@ Sets
 Sets
     map_relation_time(relation,node,year_all,time)             mapping of relations that should be accounted at subannual timestep level
     map_relation_year(relation,node,year_all,time)             mapping of relations that should be accounted at year level
+    map_tec_relation(node,relation,tec,year_all,mode,time)     mapping of technologies to relations and periods 
     relation_year(relation)                                    set of relation accounted at year level
     is_relation_upper_time(relation,node,year_all,time)     flag whether upper bounds exists for generic relation with time index
     is_relation_lower_time(relation,node,year_all,time)     flag whether lower bounds exists for generic relation with time index
