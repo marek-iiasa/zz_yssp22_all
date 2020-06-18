@@ -73,7 +73,7 @@ fixed_extraction, fixed_stock, fixed_new_capacity, fixed_capacity, fixed_activit
 * storage parameters
 storage_initial, storage_self_discharge, time_order
 * BZ added
-relation_activity_time, relation_upper_time, relation_lower_time
+is_relation_upper_time, is_relation_lower_time, relation_activity_time, relation_upper_time, relation_lower_time
 ;
 
 
@@ -179,6 +179,9 @@ map_time_period(year_all,lvl_temporal,time,time2)$( time_order(lvl_temporal,time
 map_relation_year(relation,node,year_all,time)$(
     SUM( (node2,year_all2,tec,mode), relation_activity_time(relation,node,year_all,node2,tec,year_all2,mode,time)
     ) AND ( duration_time(time) = 1 )  ) = yes;
+
+map_relation_year(relation,node,year_all,'year')$( is_relation_upper_time(relation,node,year_all,'year') OR
+    is_relation_lower_time(relation,node,year_all,'year')  ) = yes;
 
 relation_year(relation)$( SUM( (node,year_all,time), map_relation_year(relation,node,year_all,time) ) ) = yes;
 
