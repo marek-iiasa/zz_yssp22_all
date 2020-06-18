@@ -4,6 +4,7 @@ Next release
 All changes
 -----------
 
+- :pull:`368`: Updates the westeros tutorial on firm capacity.
 - :pull:`456`: Fix bug in :meth:`.years_active` to use the lifetime corresponding to the vintage year for which the active years are being retrieved.
 - :pull:`408`: Add a PowerPoint document usable to generate the RES diagrams for the Westeros tutorials.
 - :pull:`460`: Expand documentation :doc:`install` for installing GAMS under macOS.
@@ -53,6 +54,7 @@ All changes
 - :pull:`286`, :pull:`381`, :pull:`389`: Improve :meth:`.add_horizon` to also set ``duration_period``; add documentation of :doc:`time`.
 - :pull:`377`: Improve the :doc:`rmessageix <rmessageix>` R package, tutorials, and expand documentation and installation instructions.
 - :pull:`382`: Update discount factor from ``df_year`` to ``df_period`` in documentation of the objective function to match the GAMS formulation.
+
 
 v3.0.0 (2020-06-07)
 ===================
