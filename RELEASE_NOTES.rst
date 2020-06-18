@@ -1,3 +1,7 @@
+All changes
+-----------
+- :pull:`365`: Add new westeros tutorial on add-on technologies.
+
 v3.0.0 (2020-06-07)
 ===================
 
