@@ -23,4 +23,5 @@
 *input('Indonesia', 'loil_rc', year_all, year_all, 'M1', 'Indonesia', 'lightoil', 'final', 'year', 'year') = 1;
 *bound_emission('World','TCE','all','cumulative') =2700;
 *bound_new_capacity_lo('R14_WEU', 'h2_fc_RC', year_all) = 0.001;
-
+storage_initial('TAJ', 'hydro_dam', 'storage2', 'water', year_all, '1') = 0.25;
+*bound_new_capacity_up('TAJ', 'hydro_dam', year_all) = 0;
