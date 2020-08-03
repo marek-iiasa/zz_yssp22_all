@@ -281,7 +281,7 @@ Equations
     RELATION_CONSTRAINT_LO          lower bound of relations (linear constraints)
     STORAGE_CHANGE                  change in the state of charge of storage
     STORAGE_BALANCE                 balance of the state of charge of storage
-    STORAGE_BALANCE_INIT            balance of the state of charge of storage at sub-annual time steps with initial storage content
+*    STORAGE_BALANCE_INIT            balance of the state of charge of storage at sub-annual time steps with initial storage content
     STORAGE_EQUIVALENCE             mapping state of storage as activity of storage technologies
 * BZ added
 *    EMISSION_EQUIVALENCE_TIME       time dependentauxiliary equation to simplify the notation of emissions
@@ -2125,8 +2125,8 @@ STORAGE_CHANGE(node,storage_tec,level_storage,commodity,year,time)$sum(tec, map_
 *      STORAGE_{n,t,l,y,h-1} \cdot (1 - storage\_self\_discharge_{n,t,l,y,h-1}) \quad \forall \ t \in T^{STOR}, & \forall \ l \in L^{STOR}
 ***
 STORAGE_BALANCE(node,storage_tec,level,commodity,year,time2)$ (
-    SUM(tec, map_tec_storage(node,tec,storage_tec,level,commodity) )
-    AND NOT storage_initial(node,storage_tec,level,commodity,year,time2) )..
+    SUM(tec, map_tec_storage(node,tec,storage_tec,level,commodity) )  )..
+*    AND NOT storage_initial(node,storage_tec,level,commodity,year,time2) )..
 * Showing the the state of charge of storage at each timestep
     STORAGE(node,storage_tec,level,commodity,year,time2) =E=
 * change in the content of storage in the examined timestep
@@ -2135,8 +2135,11 @@ STORAGE_BALANCE(node,storage_tec,level,commodity,year,time2)$ (
     + SUM((lvl_temporal,time)$map_time_period(year,lvl_temporal,time,time2),
         STORAGE(node,storage_tec,level,commodity,year,time)
 * considering storage self-discharge losses due to keeping the storage media between two subannual timesteps
-        * (1 - storage_self_discharge(node,storage_tec,level,commodity,year,time) ) ) ;
+        * (1 - storage_self_discharge(node,storage_tec,level,commodity,year,time) )
+* initial content of storage in the examined timestep
+    + storage_initial(node,storage_tec,level,commodity,year,time2) );
 
+$ontext
 STORAGE_BALANCE_INIT(node,storage_tec,level,commodity,year,time)$ (
     SUM(tec, map_tec_storage(node,tec,storage_tec,level,commodity) )
     AND storage_initial(node,storage_tec,level,commodity,year,time) )..
@@ -2146,6 +2149,7 @@ STORAGE_BALANCE_INIT(node,storage_tec,level,commodity,year,time)$ (
 * (here the content from the previous time step is not carried over)
     storage_initial(node,storage_tec,level,commodity,year,time)
     + STORAGE_CHARGE(node,storage_tec,level,commodity,year,time) ;
+$offtext
 
 * Connecting an input commodity to maintain the operation of storage container over time (optional)
 STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,level_storage,commodity2,mode,year,time)$

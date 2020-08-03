@@ -23,5 +23,7 @@
 *input('Indonesia', 'loil_rc', year_all, year_all, 'M1', 'Indonesia', 'lightoil', 'final', 'year', 'year') = 1;
 *bound_emission('World','TCE','all','cumulative') =2700;
 *bound_new_capacity_lo('R14_WEU', 'h2_fc_RC', year_all) = 0.001;
-storage_initial('TAJ', 'hydro_dam', 'storage2', 'water', year_all, '1') = 0.25;
+*storage_initial('TAJ', 'hydro_dam', 'storage2', 'water', year_all, '1') = 0.750;
+*bound_activity_up('TAJ', 'elec_exp', year_all, mode, time) = 0.02;
 *bound_new_capacity_up('TAJ', 'hydro_dam', year_all) = 0;
+*share_commodity_lo('share_renew_elec', node, year_all, time) = 0.3;
