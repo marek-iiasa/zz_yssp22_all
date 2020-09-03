@@ -20,10 +20,6 @@
 *growth_activity_lo('R14_NAM', 'LNG_exp', year_all, time) = 0.05;
 *historical_activity('R14_NAM', 'LNG_prod', '2015','M1', time) = 47;
 *output('R14_CAS', 'elec_exp', year_all, year_all, 'M1', 'R14_CAS', 'electr', level, time, time) = 0;
-*input('Indonesia', 'loil_rc', year_all, year_all, 'M1', 'Indonesia', 'lightoil', 'final', 'year', 'year') = 1;
 *bound_emission('World','TCE','all','cumulative') =2700;
 *bound_new_capacity_lo('R14_WEU', 'h2_fc_RC', year_all) = 0.001;
-*storage_initial('TAJ', 'hydro_dam', 'storage2', 'water', year_all, '1') = 0.750;
-*bound_activity_up('TAJ', 'elec_exp', year_all, mode, time) = 0.02;
-*bound_new_capacity_up('TAJ', 'hydro_dam', year_all) = 0;
-*share_commodity_lo('share_renew_elec', node, year_all, time) = 0.3;
+*relation_activity_time('share_vre', 'CAS', year_all, 'CAS', 'elec_t_d_year', year_all,'M1', 'year') = -0.75; 

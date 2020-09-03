@@ -283,7 +283,6 @@ Equations
     STORAGE_BALANCE                 balance of the state of charge of storage
 *    STORAGE_BALANCE_INIT            balance of the state of charge of storage at sub-annual time steps with initial storage content
     STORAGE_EQUIVALENCE             mapping state of storage as activity of storage technologies
-* BZ added
 *    EMISSION_EQUIVALENCE_TIME       time dependentauxiliary equation to simplify the notation of emissions
     RELATION_EQUIVALENCE_TIME       time dependent auxiliary equation to simplify the implementation of relations
     RELATION_EQUIVALENCE_YEAR       time dependent auxiliary equation to simplify the implementation of relations at year level
@@ -400,10 +399,9 @@ COST_ACCOUNTING_NODAL(node, year)..
         emission_scaling(type_emission,emission)
         * tax_emission(node,type_emission,type_tec,type_year)
         * EMISS(node,emission,type_tec,year) )
-*######################################################################################
-* BZ added
+
 $ontext
-* emission taxes (by parent node, type of technology, type of year and type of emission)
+*+++ emission taxes for time-level emissions
     + SUM((type_emission,emission,type_tec,type_year)$( emission_scaling(type_emission,emission)
             AND cat_year(type_year,year) ),
         emission_scaling(type_emission,emission)
@@ -419,9 +417,7 @@ $offtext
     + SUM(relation$( relation_cost(relation,node,year) ),
         relation_cost(relation,node,year) * REL(relation,node,year) )
 
-*######################################################################################
-* BZ added
-* cost terms associated with linear relations on sub-annual timestep level
+*+++ cost terms associated with linear relations on sub-annual timeslice level
     + SUM((relation,time)$( relation_cost(relation,node,year) AND
           (map_relation_time(relation,node,year,time) OR map_relation_year(relation,node,year,time) ) ),
         relation_cost(relation,node,year) * REL_TIME(relation,node,year,time ) )
@@ -961,7 +957,7 @@ COMMODITY_USE_LEVEL(node,commodity,level,year,time)$(
     SUM( (location,tec,vintage,mode,time2)$( map_tec_act(location,tec,year,mode,time2)
                                              AND map_tec_lifetime(location,tec,vintage,year) ),
         input(location,tec,vintage,year,mode,node,commodity,level,time2,time)
-* BZ        * duration_time_rel(time,time2)
+*        * duration_time_rel(time,time2)
         * ACT(location,tec,vintage,year,mode,time2) ) ;
 
 ***
@@ -1014,7 +1010,7 @@ ACTIVITY_RATING_TOTAL(node,tec,vintage,year,commodity,level,time)$(
               AND map_tec_lifetime(location,tec,vintage,year) ),
             ( output(location,tec,vintage,year,mode,node,commodity,level,time2,time)
               + input(location,tec,vintage,year,mode,node,commodity,level,time2,time) )
-* BZ                * duration_time_rel(time,time2)
+*                * duration_time_rel(time,time2)
                 * ACT(location,tec,vintage,year,mode,time2) ) ;
 
 ***
@@ -1114,7 +1110,7 @@ SYSTEM_FLEXIBILITY_CONSTRAINT(node,commodity,level,year,time)$(
               AND map_tec_lifetime(location,tec,vintage,year) ),
             ( output(location,tec,vintage,year,mode,node,commodity,level,time2,time)
               + input(location,tec,vintage,year,mode,node,commodity,level,time2,time) )
-* BZ                * duration_time_rel(time,time2)
+*                * duration_time_rel(time,time2)
                 * ACT(location,tec,vintage,year,mode,time2) ) )
     + SUM((tec, vintage, mode, rating_unrated)$(
             flexibility_factor(node,tec,vintage,year,mode,commodity,level,time,rating_unrated)
@@ -1965,7 +1961,6 @@ DYNAMIC_LAND_TYPE_CONSTRAINT_LO(node,year,land_type)$( is_dynamic_land_lo(node,y
 * The parameter :math:`historical\_new\_capacity_{r,n,y}` is not included here, because relations can only be active
 * in periods included in the model horizon and there is no "writing" of capacity relation factors across periods.
 ***
-*$ontext
 RELATION_EQUIVALENCE(relation,node,year)..
     REL(relation,node,year)
         =E=
@@ -2006,9 +2001,8 @@ RELATION_CONSTRAINT_LO(relation,node,year)$( is_relation_lower(relation,node,yea
     REL(relation,node,year)
 %SLACK_RELATION_BOUND_LO% + SLACK_RELATION_BOUND_LO(relation,node,year)
     =G= relation_lower(relation,node,year) ;
-*$offtext
-*##############################################################################################
-* BZ added: relation_activity for time
+
+*+++ Linear relations at sub-annual timeslice level
 RELATION_EQUIVALENCE_TIME(relation,node,year,time)$( map_relation_time(relation,node,year,time) )..
     REL_TIME(relation,node,year,time)
         =E=
@@ -2025,6 +2019,7 @@ RELATION_EQUIVALENCE_TIME(relation,node,year,time)$( map_relation_time(relation,
           )
       ) ;
 
+*+++ Linear relations of sub-annual timeslice that is accounted at 'year' level
 RELATION_EQUIVALENCE_YEAR(relation,node,year)$( sum (time, map_relation_year(relation,node,year,time) ) )..
     REL_TIME(relation,node,year,'year')
         =E=
@@ -2051,7 +2046,6 @@ RELATION_CONSTRAINT_LO_TIME(relation,node,year,time)$( is_relation_lower_time(re
 %SLACK_RELATION_BOUND_LO_TIME% + SLACK_RELATION_BOUND_LO_TIME(relation,node,year,time)
     =G= relation_lower_time(relation,node,year,time) ;
 
-*##############################################################################################
 *----------------------------------------------------------------------------------------------------------------------*
 ***
 * .. _gams-storage:
@@ -2157,7 +2151,7 @@ STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,level_storage,commodity2,mo
       sum(tec, map_tec_storage(node,tec,storage_tec,level_storage,commodity2) ) )..
 
 *         STORAGE(node,storage_tec,level_storage,commodity2,year,time) =E=
-* BZ added, to related ACT of dam to ACT of pump + initial storage
+*+++ Proposal to relate ACT of dam to ACT of pump + initial storage, instead sum of SOC throughout the year
         SUM( (tec,location,vintage,time2)$(
         map_tec_lifetime(node,tec,vintage,year)
         AND map_tec_storage(node,tec,storage_tec,level_storage,commodity2) ),
