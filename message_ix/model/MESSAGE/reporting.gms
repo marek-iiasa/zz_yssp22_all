@@ -53,10 +53,10 @@ report_total_capacity(node,inv_tec,historical) $( sum(vintage, map_tec_lifetime(
 *report_activity(node,tec,year_all,"ref")$( map_tec(node,tec,year_all) ) =
 *    sum((mode,time), ref_activity(node,tec,year_all,mode,time) ) ;
 
-report_activity(node,tec,historical,"actual")$( map_tec(node,tec,historical) ) =
-    sum((mode,time), historical_activity(node,tec,historical,mode,time) ) ;
+report_activity(node,tec,historical,'year')$( map_tec(node,tec,historical) ) =
+    sum((mode), historical_activity(node,tec,historical,mode,'year') ) ;
 
-report_activity(node,tec,year,"actual")$( map_tec(node,tec,year) ) =
-    sum((location,vintage,mode,time)$( map_node(node,location) ),
-        ACT.l(location,tec,vintage,year,mode,time) ) ;
+report_activity(node,tec,year,'year')$( map_tec(node,tec,year) ) =
+    sum((location,vintage,mode)$( map_node(node,location) ),
+        ACT.l(location,tec,vintage,year,mode,'year') ) ;
 
