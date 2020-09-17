@@ -844,7 +844,8 @@ RENEWABLES_EQUIVALENCE(node,renewable_tec,commodity,year,time)$(
                  map_tec_act(node,renewable_tec,year,mode,time)
                  AND map_tec_lifetime(node,renewable_tec,vintage,year) ),
         input(location,renewable_tec,vintage,year,mode,node,commodity,level_renewable,time_act,time)
-        * ACT(location,renewable_tec,vintage,year,mode,time) ) ;
+* BZ: for ACT changed from time to time_act
+        * ACT(location,renewable_tec,vintage,year,mode,time_act) ) ;
 
 ***
 * .. _equation_renewables_potential_constraint:
