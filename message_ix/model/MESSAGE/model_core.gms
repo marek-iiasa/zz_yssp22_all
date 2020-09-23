@@ -2279,6 +2279,7 @@ STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,level_storage,commodity2,mo
 
 *         STORAGE(node,storage_tec,level_storage,commodity2,year,time) =E=
 *+++ Proposal to relate ACT of dam to ACT of pump + initial storage, instead sum of SOC throughout the year
+*$ontext
         SUM( (tec,location,vintage,time2)$(
         map_tec_lifetime(node,tec,vintage,year)
         AND map_tec_storage(node,tec,storage_tec,level_storage,commodity2) ),
@@ -2287,6 +2288,7 @@ STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,level_storage,commodity2,mo
             * ACT(location,tec,vintage,year,mode,time) )
        + storage_initial(node,storage_tec,level,commodity2,year,time)
         =E=
+*$offtext
         SUM( (location,vintage,time2)$(map_tec_lifetime(node,storage_tec,vintage,year)$(
               input(location,storage_tec,vintage,year,mode,node,commodity,level,time2,time) ) ),
 *              duration_time_rel(time,time2) *

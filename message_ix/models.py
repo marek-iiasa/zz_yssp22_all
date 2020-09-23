@@ -242,6 +242,7 @@ MESSAGE_ITEMS = {
     # Initial amount of storage
     "storage_initial": item("par", "n t l c y h"),
     # Storage losses as a percentage of installed capacity
+    'STORAGE': dict(ix_type='var', idx_sets=_idx_common),
     "storage_self_discharge": item("par", "n t l c y h"),
     "subsidy": item("par", "nl type_tec ya"),
     "tax_emission": dict(
