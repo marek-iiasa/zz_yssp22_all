@@ -41,6 +41,7 @@ MESSAGE_ITEMS = {
     'storage_initial': dict(ix_type='par', idx_sets=_idx_common),
     # Storage losses as a percentage of installed capacity
     'storage_self_discharge': dict(ix_type='par', idx_sets=_idx_common),
+    'STORAGE': dict(ix_type='var', idx_sets=_idx_common),
 }
 
 
