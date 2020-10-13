@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
-"""Add model years to an existing Scenario."""
-# Sections of the code:
-#
-#   I. Required python packages are imported
-#  II. Generic utilities for dataframe manipulation
-# III. The main function, add_year()
-#  IV. Function add_year_set() for adding and modifying the sets
-#   V. Function add_year_par() for copying and modifying each parameter
-#  VI. Two utility functions, interpolate_1d() and interpolate_2d(), for
-#      calculating missing values
+"""Add model years to an existing Scenario.
+Sections of the code:
 
-# %% I) Importing required packages
+   I. Required python packages are imported
+   II. Generic utilities for dataframe manipulation
+   III. The main function, add_year()
+   IV. Function add_year_set() for adding and modifying the sets
+   V. Function add_year_par() for copying and modifying each parameter
+   VI. Two utility functions, interpolate_1d() and interpolate_2d(), for
+       calculating missing values
+"""
+
+# I) Importing required packages
 
 import numpy as np
 import pandas as pd
 
 
-# %% II) Utility functions for dataframe manupulation
+# II) Utility functions for dataframe manupulation
 def intpol(y1, y2, x1, x2, x):
     """Interpolate between (*x1*, *y1*) and (*x2*, *y2*) at *x*.
 
@@ -76,7 +77,7 @@ def unit_uniform(df):
     return df
 
 
-# %% III) The main function
+# III) The main function
 def add_year(sc_ref, sc_new, years_new, firstyear_new=None, lastyear_new=None,
              macro=False, baseyear_macro=None, parameter='all', region='all',
              rewrite=True, unit_check=True, extrapol_neg=None,
@@ -123,7 +124,7 @@ def add_year(sc_ref, sc_new, years_new, firstyear_new=None, lastyear_new=None,
                         not in set(sc_ref.set('year'))])
     add_year_set(sc_ref, sc_new, years_new, firstyear_new, lastyear_new,
                  baseyear_macro)
-    # -------------------------------------------------------------------------
+
     # III.B)  Adding parameters and calculating the missing values for the
     # additonal years
     if parameter in ('all', ['all']):
@@ -209,8 +210,8 @@ def add_year(sc_ref, sc_new, years_new, firstyear_new=None, lastyear_new=None,
           'added to the new scenario.')
 
 
-# %% Submodules needed for running the main function
-#   IV) Adding new years to sets
+# Submodules needed for running the main function
+# IV) Adding new years to sets
 def add_year_set(sc_ref, sc_new, years_new, firstyear_new=None,
                  lastyear_new=None, baseyear_macro=None):
     """Add new years to sets.
@@ -305,7 +306,7 @@ def add_year_set(sc_ref, sc_new, years_new, firstyear_new=None,
     print('> All the sets updated and added to the new scenario.')
 
 
-# %% V) Adding new years to parameters
+# V) Adding new years to parameters
 def add_year_par(sc_ref, sc_new, yrs_new, parname, reg_list, firstyear_new,
                  extrapolate=False, rewrite=True, unit_check=True,
                  extrapol_neg=None, bound_extend=True):
@@ -369,7 +370,7 @@ def add_year_par(sc_ref, sc_new, yrs_new, parname, reg_list, firstyear_new,
     # A uniform "unit" for values in different years
     if 'unit' in par_old.columns and unit_check:
         par_old = unit_uniform(par_old)
-#   ---------------------------------------------------------------------------
+
 #   V.B) Adding new years to a parameter based on time-related indexes
 #   V.B.1) Parameters with no time index
     if len(year_list) == 0:
@@ -425,7 +426,7 @@ def add_year_par(sc_ref, sc_new, yrs_new, parname, reg_list, firstyear_new,
               ' for node/s: "{}".'.format(parname, nodes))
 
 
-# %% VI) Required functions
+# VI) Required functions
 def interpolate_1d(df, yrs_new, horizon, year_col, value_col='value',
                    extrapolate=False, extrapol_neg=None, bound_extend=True):
     """Interpolate data with one year dimension.
