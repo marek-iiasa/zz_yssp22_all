@@ -559,7 +559,7 @@ def interpolate_1d(df, yrs_new, horizon, year_col, value_col='value',
 # VI.B) Interpolating parameters with two dimensions related to time
 def interpolate_2d(df, yrs_new, horizon, year_ref, year_col, tec_list, par_tec,
                    value_col='value', extrapolate=False, extrapol_neg=None,
-                   year_diff=None, bound_extend=True):
+                   year_diff=[], bound_extend=True):
     """Interpolate parameters with two dimensions related year.
 
     This function receives a dataframe that has 2 time-related columns (e.g.,
@@ -602,13 +602,11 @@ def interpolate_2d(df, yrs_new, horizon, year_ref, year_col, tec_list, par_tec,
         return df
         print('+++ WARNING: The submitted dataframe is empty, so'
               ' returned empty results!!! +++')
-
     df_tec = df.loc[df['technology'].isin(tec_list)]
     idx = [x for x in df.columns if x not in [year_col, value_col]]
     df2 = df.pivot_table(index=idx, columns=year_col, values='value')
     df2_tec = df_tec.pivot_table(index=idx, columns=year_col, values='value')
 
-    # -------------------------------------------------------------------------
     # First, changing the time interval for the transition period
     # (e.g., year 2010 in old R11 model transits from 5 year to 10 year)
     horizon_new = sorted(horizon + [x for x in yrs_new if x not in horizon])
@@ -618,14 +616,20 @@ def interpolate_2d(df, yrs_new, horizon, year_ref, year_col, tec_list, par_tec,
     yr_diff_new = [x for x in horizon_new[1:-1] if f(horizon_new,
                                                      horizon_new.index(x))]
 
+    if year_diff and tec_list:
+        yr_diff_new = [x for x in yr_diff_new if x not in year_diff]
     # Generating duration_period_sum matrix for masking
+    dur = list(np.diff(horizon_new))
+    dur.insert(0, dur[0])
+    dur = pd.DataFrame(index=horizon_new, data=dur)
     df_dur = pd.DataFrame(index=horizon_new[:-1], columns=horizon_new[1:])
     for i in df_dur.index:
         for j in [x for x in df_dur.columns if x > i]:
-            df_dur.loc[i, j] = j - i
+            df_dur.loc[i, j] = int(dur.loc[(dur.index >= i
+                                        ) & (dur.index < j)].sum())
 
     # Adding data for new transition year
-    if yr_diff_new and tec_list and year_diff not in yr_diff_new:
+    if yr_diff_new and tec_list:
         yrs = [x for x in horizon if x <= yr_diff_new[0]]
         year_next = min([x for x in df2.columns if x > yr_diff_new[0]])
         df_yrs = slice_df(df2_tec, idx, year_ref, yrs, [])
@@ -653,12 +657,6 @@ def interpolate_2d(df, yrs_new, horizon, year_ref, year_col, tec_list, par_tec,
             d[d.isnull() & d_n.notnull()] = d_n
             df2.loc[df2.index.isin(d.index), :] = d
 
-        cond1 = (df_dur.index <= yr_diff_new[0])
-        cond2 = (df_dur.columns >= year_next)
-        subt = yr_diff_new[0] - horizon_new[horizon_new.index(yr_diff_new[0]
-                                                              ) - 1]
-        df_dur.loc[cond1, cond2] = df_dur.loc[cond1, cond2] - subt
-    # -------------------------------------------------------------------------
     # Second, adding year_act of new years if year_vtg is in existing years
     for yr in yrs_new:
         if yr > max(horizon):
@@ -687,7 +685,7 @@ def interpolate_2d(df, yrs_new, horizon, year_ref, year_col, tec_list, par_tec,
             if not df2[yr].loc[cond].empty and extrapol_neg:
                 df2.loc[cond, yr] = df2.loc[cond, year_pre] * extrapol_neg
 
-        # b) Otherise, do intrapolation
+        # b) Otherwise, do intrapolation
         elif yr > min(df2.columns) and yr < max(df2.columns):
             year_pre = max([x for x in df2.columns if x < yr])
             year_next = min([x for x in df2.columns if x > yr])
@@ -720,7 +718,7 @@ def interpolate_2d(df, yrs_new, horizon, year_ref, year_col, tec_list, par_tec,
                 df2.loc[df2_tec.index, :] = df2_t
             df2[yr][np.isinf(df2[year_pre])] = df2[year_pre]
         df2 = df2.reindex(sorted(df2.columns), axis=1)
-    # -------------------------------------------------------------------------
+
     # Third, adding year_vtg of new years
     for yr in yrs_new:
         # a) If this new year is greater than modeled years, do extrapolation
@@ -757,8 +755,7 @@ def interpolate_2d(df, yrs_new, horizon, year_ref, year_col, tec_list, par_tec,
                 continue
             if not df_yr.empty and yr not in df_yr.columns:
                 df_yr[yr] = np.nan
-                # TODO: here is the place that should be changed if the
-                # new year should go to the time step before the existing one
+                # If the new year should go to the time step before
                 if bound_extend and not df_next.empty:
                     df_yr[yr] = df_yr[year_next]
                 elif bound_extend and not df_pre.empty:
@@ -796,7 +793,7 @@ def interpolate_2d(df, yrs_new, horizon, year_ref, year_col, tec_list, par_tec,
 
         df2 = df2.append(df_yr)
         df2 = df2.reindex(sorted(df2.columns), axis=1).sort_index()
-    # -------------------------------------------------------------------------
+
     # Forth: final masking based on technical lifetime
     if tec_list and not df_dur.empty:
 
