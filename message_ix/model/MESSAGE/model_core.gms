@@ -2064,6 +2064,8 @@ STORAGE_BALANCE_INIT(node,storage_tec,level,commodity,year,time)$ (
 * initial content of storage and change in the content of storage in the examined timestep
 * (here the content from the previous time step is not carried over)
     storage_initial(node,storage_tec,level,commodity,year,time)
+* BZ testing if storage initial can be a % of capacity of storage reservoir
+    * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), CAP(node,storage_tec,vintage,year)  )
     + STORAGE_CHARGE(node,storage_tec,level,commodity,year,time) ;
 
 * Connecting an input commodity to maintain the operation of storage container over time (optional)
