@@ -12,4 +12,4 @@
 advind = 0
 lpmethod = 4
 threads = 4
-epopt 1e-6
+epopt 1e-3
