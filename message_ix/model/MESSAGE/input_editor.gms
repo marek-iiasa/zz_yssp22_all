@@ -22,4 +22,6 @@
 *output('R14_CAS', 'elec_exp', year_all, year_all, 'M1', 'R14_CAS', 'electr', level, time, time) = 0;
 *bound_emission('World','TCE','all','cumulative') =2700;
 *bound_new_capacity_lo('R14_WEU', 'h2_fc_RC', year_all) = 0.001;
-*relation_activity_time('share_vre', 'CAS', year_all, 'CAS', 'elec_t_d_year', year_all,'M1', 'year') = -0.75; 
+*relation_activity_time('share_vre', 'CAS', year_all, 'CAS', 'elec_t_d_year', year_all,'M1', 'year') = -0.75;
+storage_initial('KRG', 'hydro_dam', 'storage2', 'water', year_all, '1') = 0.5;
+storage_initial('TAJ', 'hydro_dam', 'storage2', 'water', year_all, '1') = 1.5;

@@ -283,7 +283,7 @@ Equations
     STORAGE_BALANCE                 balance of the state of charge of storage
     STORAGE_BALANCE_INIT            balance of the state of charge of storage at sub-annual time steps with initial storage content
     STORAGE_INPUT                   connecting an input commodity to maintain the activity of storage container (not stored commodity)
-    STORAGE_EQUIVALENCE             equalizing the content of storage at the end of cycle to the initial content
+*    STORAGE_EQUIVALENCE             equalizing the content of storage at the end of cycle to the initial content
 *    EMISSION_EQUIVALENCE_TIME       time dependentauxiliary equation to simplify the notation of emissions
     RELATION_EQUIVALENCE_TIME       time dependent auxiliary equation to simplify the implementation of relations
     RELATION_EQUIVALENCE_YEAR       time dependent auxiliary equation to simplify the implementation of relations at year level
@@ -2147,9 +2147,9 @@ STORAGE_BALANCE_INIT(node,storage_tec,level,commodity,year,time)$ (
 * (here the content from the previous time step is not carried over)
     storage_initial(node,storage_tec,level,commodity,year,time)
 * BZ testing if storage initial can be a % of capacity of storage reservoir
-    * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), CAP(node,storage_tec,vintage,year)  )
+*    * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), CAP(node,storage_tec,vintage,year)  )
     + STORAGE_CHARGE(node,storage_tec,level,commodity,year,time) ;
-
+$ontext
 * BZ: new equation: if storage_initial, then the operation should maintain this initial value at the end of the cycle
 STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,year,time,time2)$ (
     SUM(tec, map_tec_storage(node,tec,storage_tec,level,commodity) )
@@ -2159,7 +2159,7 @@ STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,year,time,time2)$ (
         SUM( (lvl_temporal)$map_time_period(year,lvl_temporal,time,time2),
               storage_initial(node,storage_tec,level,commodity,year,time2)
            * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), CAP(node,storage_tec,vintage,year)  ) );
-
+$offtext
 * Connecting an input commodity to maintain the operation of storage container over time (optional)
 STORAGE_INPUT(node,storage_tec,level,commodity,level_storage,commodity2,mode,year,time)$
     ( map_time_commodity_storage(node,storage_tec,level,commodity,mode,year,time) AND
