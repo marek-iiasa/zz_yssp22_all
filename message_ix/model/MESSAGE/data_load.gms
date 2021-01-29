@@ -72,8 +72,6 @@ is_fixed_extraction, is_fixed_stock, is_fixed_new_capacity, is_fixed_capacity, i
 fixed_extraction, fixed_stock, fixed_new_capacity, fixed_capacity, fixed_activity, fixed_land
 * storage parameters
 storage_initial, storage_self_discharge, time_order
-* +++ time-related relation parameters and mappings
-is_relation_upper_time, is_relation_lower_time, relation_activity_time, relation_upper_time, relation_lower_time
 ;
 
 
@@ -108,17 +106,6 @@ $INCLUDE includes/period_parameter_assignment.gms
 * compute auxiliary parameters for relative duration of subannual time periods
 duration_time_rel(time,time2)$( map_time(time,time2) ) = duration_time(time2) / duration_time(time) ;
 
-*+++ Adding the mapping of new time-related parameters to existing mappings ++++
-* (as mappings are made in backend and they don't capture new parameters)
-* map_tec_relation is needed, because some relations like CO2_Emissions will be zero if sum over relations at once (-1 + 1 = 0)
-map_tec_relation(node,relation,tec,year_all,mode,time)$(sum( (node2,year_all2),
-    relation_activity_time(relation,node2,year_all,node,tec,year_all2,mode,time) ) ) = yes;
-
-* mapping of technologies to node and year
-map_tec(node,tec,year_all)$(sum( (relation,mode,time), map_tec_relation(node,relation,tec,year_all,mode,time) ) ) = yes;
-map_tec_mode(node,tec,year_all,mode)$(sum( (relation,time), map_tec_relation(node,relation,tec,year_all,mode,time) ) ) = yes;
-map_tec_time(node,tec,year_all,time)$(sum( (relation,mode), map_tec_relation(node,relation,tec,year_all,mode,time) ) ) = yes;
-
 * assign an additional mapping set for technologies to nodes, modes and subannual time slices (for shorter reference)
 map_tec_act(node,tec,year_all,mode,time)$( map_tec_time(node,tec,year_all,time) AND
    map_tec_mode(node,tec,year_all,mode) ) = yes ;
@@ -151,14 +138,14 @@ map_ren_grade(node,commodity,grade,year_all)$(
 map_rating(node,inv_tec,commodity,level,rating,year_all)$(
     SUM(time, reliability_factor(node,inv_tec,year_all,commodity,level,time,rating) ) ) = yes;
 
+* set the default capacity factor for technologies where no parameter value is provided in the input data
+capacity_factor(node,tec,year_all2,year_all,time)$( map_tec_time(node,tec,year_all,time)
+    AND map_tec_lifetime(node,tec,year_all2,year_all) AND NOT capacity_factor(node,tec,year_all2,year_all,time) ) = 1 ;
+
 * assign the yearly average capacity factor (used in equation OPERATION_CONSTRAINT)
 capacity_factor(node,tec,year_all2,year_all,'year') =
     sum(time$map_tec_time(node,tec,year_all,time), duration_time(time)
         * capacity_factor(node,tec,year_all2,year_all,time) ) ;
-
-* set the default capacity factor for technologies where no parameter value is provided in the input data
-capacity_factor(node,tec,year_all2,year_all,time)$( map_tec_time(node,tec,year_all,time)
-    AND map_tec_lifetime(node,tec,year_all2,year_all) AND NOT capacity_factor(node,tec,year_all2,year_all,time) ) = 1 ;
 
 * set the default operation factor for technologies where no parameter value is provided in the input data
 operation_factor(node,tec,year_all2,year_all)$( map_tec(node,tec,year_all)
@@ -185,21 +172,6 @@ map_time_period(year_all,lvl_temporal,time,time2)$( time_order(lvl_temporal,time
 * mapping of sequence of the last sub-annual timestep to the first to create a close the order of timesteps
 map_time_period(year_all,lvl_temporal,time,time2)$( time_order(lvl_temporal,time) AND
      time_order(lvl_temporal,time) = SMAX(time3,time_order(lvl_temporal,time3) ) AND time_order(lvl_temporal,time2) = 1 ) = yes;
-
-* +++ mapping of relations that should be accounted at 'year' even with sub-annual timeslices
-map_relation_year(relation,node,year_all,time)$(
-    SUM( (node2,year_all2,tec,mode), relation_activity_time(relation,node,year_all,node2,tec,year_all2,mode,time)
-    ) AND ( duration_time(time) = 1 )  ) = yes;
-* +++ including those with only activity at timelsice, but relation at 'year' level
-map_relation_year(relation,node,year_all,'year')$( is_relation_upper_time(relation,node,year_all,'year') OR
-    is_relation_lower_time(relation,node,year_all,'year')  ) = yes;
-* +++ set of relations at 'year' level
-relation_year(relation)$( SUM( (node,year_all,time), map_relation_year(relation,node,year_all,time) ) ) = yes;
-
-* +++ mapping of relations that should be accounted at subannual timesteps
-map_relation_time(relation,node,year_all,time)$(
-    SUM( (node2,year_all2,tec,mode), relation_activity_time(relation,node,year_all,node2,tec,year_all2,mode,time)
-    ) AND NOT relation_year(relation) ) = yes;
 *----------------------------------------------------------------------------------------------------------------------*
 * sanity checks on the data set                                                                                        *
 *----------------------------------------------------------------------------------------------------------------------*
@@ -230,7 +202,7 @@ if (check,
 loop(lvl_temporal,
     loop(time2$( sum(time, map_temporal_hierarchy(lvl_temporal,time,time2) ) ),
         check = 1$( sum( time$( map_temporal_hierarchy(lvl_temporal,time,time2) ),
-            duration_time(time) ) > (duration_time(time2) + 0.02 )) ;
+            duration_time(time) ) ne duration_time(time2) ) ;
     ) ;
 ) ;
 if (check,

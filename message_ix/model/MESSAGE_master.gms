@@ -45,7 +45,7 @@ $ONGLOBAL
 *----------------------------------------------------------------------------------------------------------------------*
 
 ** scenario/case selection - this must match the name of the MsgData_<%%%>.gdx input data file **
-$SETGLOBAL data "<your datafile name here>"
+$SETGLOBAL data "MESSAGE_CASm__compact__v1"
 
 ** MACRO mode
 * "none": MESSAGEix is run in stand-alone mode
@@ -85,10 +85,10 @@ $SETGLOBAL SLACK_CAP_TOTAL_BOUND_LO "*"
 $SETGLOBAL SLACK_CAP_NEW_DYNAMIC_UP "*"
 $SETGLOBAL SLACK_CAP_NEW_DYNAMIC_LO "*"
 
-$SETGLOBAL SLACK_ACT_BOUND_UP "*"
-$SETGLOBAL SLACK_ACT_BOUND_LO "*"
-$SETGLOBAL SLACK_ACT_DYNAMIC_UP "*"
-$SETGLOBAL SLACK_ACT_DYNAMIC_LO "*"
+$SETGLOBAL SLACK_ACT_BOUND_UP ""
+$SETGLOBAL SLACK_ACT_BOUND_LO ""
+$SETGLOBAL SLACK_ACT_DYNAMIC_UP ""
+$SETGLOBAL SLACK_ACT_DYNAMIC_LO ""
 
 $SETGLOBAL SLACK_LAND_SCEN_UP "*"
 $SETGLOBAL SLACK_LAND_SCEN_LO "*"

@@ -57,8 +57,6 @@ $IF NOT SET SLACK_LAND_TYPE_LO       $SETGLOBAL SLACK_LAND_TYPE_LO "*"
 $IF NOT SET SLACK_RELATION_BOUND_UP  $SETGLOBAL SLACK_RELATION_BOUND_UP "*"
 $IF NOT SET SLACK_RELATION_BOUND_LO  $SETGLOBAL SLACK_RELATION_BOUND_LO "*"
 
-$IF NOT SET SLACK_RELATION_BOUND_UP_TIME  $SETGLOBAL SLACK_RELATION_BOUND_UP_TIME  "*"
-$IF NOT SET SLACK_RELATION_BOUND_LO_TIME  $SETGLOBAL SLACK_RELATION_BOUND_LO_TIME  "*"
 *----------------------------------------------------------------------------------------------------------------------*
 * initialize sets, mappings, parameters, load data, do pre-processing                                                  *
 *----------------------------------------------------------------------------------------------------------------------*
@@ -77,7 +75,7 @@ $INCLUDE MESSAGE/parameter_def.gms
 
 ** load data from gdx, run processing scripts of auxiliary parameters
 $INCLUDE MESSAGE/data_load.gms
-$INCLUDE MESSAGE/input_editor.gms
+$INCLUDE MESSAGE/input_editor.gms 
 ** compute auxiliary parameters for capacity and investment cost accounting
 $INCLUDE MESSAGE/scaling_investment_costs.gms
 

@@ -102,6 +102,8 @@ Positive Variables
     LAND(node,land_scenario,year_all) relative share of land-use scenario
 * content of storage
     STORAGE(node,tec,level,commodity,year_all,time)       state of charge (SoC) of storage at each sub-annual timestep (positive)
+* initial content of storage
+    STORAGE_INIT(node,tec,level,commodity,year_all,time)       initial content of storage (positive)
 ;
 
 Variables
@@ -117,8 +119,6 @@ Variables
     EMISS(node,emission,type_tec,year_all)       aggregate emissions by technology type and land-use model emulator
 * auxiliary variable for left-hand side of relations (linear constraints)
     REL(relation,node,year_all)                  auxiliary variable for left-hand side of user-defined relations
-* time-related auxiliary variable for left-hand side of relations (linear constraints)
-    REL_TIME(relation,node,year_all,time)                  auxiliary variable for left-hand side of user-defined relations
 * change in the content of storage device
     STORAGE_CHARGE(node,tec,level,commodity,year_all,time)    charging of storage in each timestep (negative for discharge)
 ;
@@ -220,8 +220,6 @@ Positive variables
     SLACK_LAND_TYPE_LO(node,year_all,land_type)       slack variable for dynamic land type constraint relaxation (downwards)
     SLACK_RELATION_BOUND_UP(relation,node,year_all)   slack variable for upper bound of generic relation
     SLACK_RELATION_BOUND_LO(relation,node,year_all)   slack variable for lower bound of generic relation
-    SLACK_RELATION_BOUND_UP_TIME(relation,node,year_all,time)   slack variable for upper bound of generic relation with subannual timestep
-    SLACK_RELATION_BOUND_LO_TIME(relation,node,year_all,time)   slack variable for lower bound of generic relation with subannual timestep
 ;
 
 *----------------------------------------------------------------------------------------------------------------------*
@@ -288,6 +286,8 @@ Equations
     STORAGE_CHANGE                  change in the state of charge of storage
     STORAGE_BALANCE                 balance of the state of charge of storage
     STORAGE_BALANCE_INIT            balance of the state of charge of storage at sub-annual time steps with initial storage content
+    STORAGE_EQUIVALENCE             equalizing the content of storage at the end of cycle to the initial content
+    STORAGE_INPUT                   connecting an input commodity to maintain the activity of storage container (not stored commodity)
     STORAGE_EQUIVALENCE             equalizing the content of storage at the end of cycle to the initial content
     STORAGE_INPUT                   connecting an input commodity to maintain the activity of storage container (not stored commodity)
 *    EMISSION_EQUIVALENCE_TIME       time dependentauxiliary equation to simplify the notation of emissions
@@ -412,29 +412,12 @@ COST_ACCOUNTING_NODAL(node, year)..
         emission_scaling(type_emission,emission)
         * tax_emission(node,type_emission,type_tec,type_year)
         * EMISS(node,emission,type_tec,year) )
-
-$ontext
-*+++ emission taxes for time-level emissions
-    + SUM((type_emission,emission,type_tec,type_year)$( emission_scaling(type_emission,emission)
-            AND cat_year(type_year,year) ),
-        emission_scaling(type_emission,emission)
-        * tax_emission(node,type_emission,type_tec,type_year)
-        * SUM(time, EMISS_TIME(node,emission,type_tec,year,time) ) )
-$offtext
-
 * cost terms from land-use model emulator (only includes valid node-land_scenario-year combinations)
     + SUM(land_scenario$( land_cost(node,land_scenario,year) ),
         land_cost(node,land_scenario,year) * LAND(node,land_scenario,year) )
 * cost terms associated with linear relations
-
     + SUM(relation$( relation_cost(relation,node,year) ),
         relation_cost(relation,node,year) * REL(relation,node,year) )
-
-*+++ cost terms associated with linear relations on sub-annual timeslice level
-    + SUM((relation,time)$( relation_cost(relation,node,year) AND
-          (map_relation_time(relation,node,year,time) OR map_relation_year(relation,node,year,time) ) ),
-        relation_cost(relation,node,year) * REL_TIME(relation,node,year,time ) )
-
 * implementation of slack variables for constraints to aid in debugging
     + SUM((commodity,level,time)$( map_commodity(node,commodity,level,year,time) ), ( 0
 %SLACK_COMMODITY_EQUIVALENCE%   + SLACK_COMMODITY_EQUIVALENCE_UP(node,commodity,level,year,time)
@@ -467,10 +450,6 @@ $offtext
     + SUM((relation), 0
 %SLACK_RELATION_BOUND_UP% + 1e6 * SLACK_RELATION_BOUND_UP(relation,node,year)$( is_relation_upper(relation,node,year) )
 %SLACK_RELATION_BOUND_LO% + 1e6 * SLACK_RELATION_BOUND_LO(relation,node,year)$( is_relation_lower(relation,node,year) )
-        )
-    + SUM((relation,time), 0
-%SLACK_RELATION_BOUND_UP_TIME% + 1e6 * SLACK_RELATION_BOUND_UP_TIME(relation,node,year,time)
-%SLACK_RELATION_BOUND_LO_TIME% + 1e6 * SLACK_RELATION_BOUND_LO_TIME(relation,node,year,time)
         )
 ;
 
@@ -599,10 +578,10 @@ $macro COMMODITY_BALANCE(node,commodity,level,year,time) (                      
             AND map_tec_lifetime(location,tec,vintage,year) ),                                                         \
 * import into node and output by all technologies located at 'location' sending to 'node' and 'time2' sending to 'time'
         output(location,tec,vintage,year,mode,node,commodity,level,time2,time)                                         \
-         * ACT(location,tec,vintage,year,mode,time2)                                    \
+        * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time2)                                    \
 * export from node and input into technologies located at 'location' taking from 'node' and 'time2' taking from 'time'
         - input(location,tec,vintage,year,mode,node,commodity,level,time2,time)                                        \
-         * ACT(location,tec,vintage,year,mode,time2) )                                  \
+        * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time2) )                                  \
 * quantity taken out from ( >0 ) or put into ( <0 ) inter-period stock (storage)
     + STOCK_CHG(node,commodity,level,year,time)$( map_stocks(node,commodity,level,year) )                              \
 * yield from land-use model emulator
@@ -845,8 +824,7 @@ RENEWABLES_EQUIVALENCE(node,renewable_tec,commodity,year,time)$(
                  map_tec_act(node,renewable_tec,year,mode,time)
                  AND map_tec_lifetime(node,renewable_tec,vintage,year) ),
         input(location,renewable_tec,vintage,year,mode,node,commodity,level_renewable,time_act,time)
-* BZ: for ACT changed from time to time_act
-        * ACT(location,renewable_tec,vintage,year,mode,time_act) ) ;
+        * ACT(location,renewable_tec,vintage,year,mode,time) ) ;
 
 ***
 * .. _equation_renewables_potential_constraint:
@@ -1013,7 +991,7 @@ COMMODITY_USE_LEVEL(node,commodity,level,year,time)$(
     SUM( (location,tec,vintage,mode,time2)$( map_tec_act(location,tec,year,mode,time2)
                                              AND map_tec_lifetime(location,tec,vintage,year) ),
         input(location,tec,vintage,year,mode,node,commodity,level,time2,time)
-*        * duration_time_rel(time,time2)
+        * duration_time_rel(time,time2)
         * ACT(location,tec,vintage,year,mode,time2) ) ;
 
 ***
@@ -1070,7 +1048,7 @@ ACTIVITY_RATING_TOTAL(node,tec,vintage,year,commodity,level,time)$(
               AND map_tec_lifetime(location,tec,vintage,year) ),
             ( output(location,tec,vintage,year,mode,node,commodity,level,time2,time)
               + input(location,tec,vintage,year,mode,node,commodity,level,time2,time) )
-*                * duration_time_rel(time,time2)
+                * duration_time_rel(time,time2)
                 * ACT(location,tec,vintage,year,mode,time2) ) ;
 
 ***
@@ -1174,7 +1152,7 @@ SYSTEM_FLEXIBILITY_CONSTRAINT(node,commodity,level,year,time)$(
               AND map_tec_lifetime(location,tec,vintage,year) ),
             ( output(location,tec,vintage,year,mode,node,commodity,level,time2,time)
               + input(location,tec,vintage,year,mode,node,commodity,level,time2,time) )
-*                * duration_time_rel(time,time2)
+                * duration_time_rel(time,time2)
                 * ACT(location,tec,vintage,year,mode,time2) ) )
     + SUM((tec, vintage, mode, rating_unrated)$(
             flexibility_factor(node,tec,vintage,year,mode,commodity,level,time,rating_unrated)
@@ -1468,7 +1446,7 @@ SHARE_CONSTRAINT_COMMODITY_UP(shares,node_share,year,time)$( share_commodity_up(
             output(location,tec,vintage,year,mode,node,commodity,level,time2,time) +
             input(location,tec,vintage,year,mode,node,commodity,level,time2,time)
         ) *
-*        duration_time_rel(time,time2) *
+        duration_time_rel(time,time2) *
         ACT(location,tec,vintage,year,mode,time2)
     )
     =L=
@@ -1485,7 +1463,7 @@ SHARE_CONSTRAINT_COMMODITY_UP(shares,node_share,year,time)$( share_commodity_up(
             output(location,tec,vintage,year,mode,node,commodity,level,time2,time) +
             input(location,tec,vintage,year,mode,node,commodity,level,time2,time)
         ) *
-*        duration_time_rel(time,time2) *
+        duration_time_rel(time,time2) *
         ACT(location,tec,vintage,year,mode,time2)
     ) ) ;
 
@@ -1519,7 +1497,7 @@ SHARE_CONSTRAINT_COMMODITY_LO(shares,node_share,year,time)$( share_commodity_lo(
             output(location,tec,vintage,year,mode,node,commodity,level,time2,time) +
             input(location,tec,vintage,year,mode,node,commodity,level,time2,time)
         ) *
-*        duration_time_rel(time,time2) *
+        duration_time_rel(time,time2) *
         ACT(location,tec,vintage,year,mode,time2)
     )
     =G=
@@ -1536,7 +1514,7 @@ SHARE_CONSTRAINT_COMMODITY_LO(shares,node_share,year,time)$( share_commodity_lo(
             output(location,tec,vintage,year,mode,node,commodity,level,time2,time) +
             input(location,tec,vintage,year,mode,node,commodity,level,time2,time)
         ) *
-*        duration_time_rel(time,time2) *
+        duration_time_rel(time,time2) *
         ACT(location,tec,vintage,year,mode,time2)
     ) ) ;
 
@@ -2081,6 +2059,7 @@ DYNAMIC_LAND_TYPE_CONSTRAINT_LO(node,year,land_type)$( is_dynamic_land_lo(node,y
 * The parameter :math:`historical\_new\_capacity_{r,n,y}` is not included here, because relations can only be active
 * in periods included in the model horizon and there is no "writing" of capacity relation factors across periods.
 ***
+
 RELATION_EQUIVALENCE(relation,node,year)..
     REL(relation,node,year)
         =E=
@@ -2126,50 +2105,6 @@ RELATION_CONSTRAINT_LO(relation,node,year)$( is_relation_lower(relation,node,yea
 %SLACK_RELATION_BOUND_LO% + SLACK_RELATION_BOUND_LO(relation,node,year)
     =G= relation_lower(relation,node,year) ;
 
-*+++ Linear relations at sub-annual timeslice level
-RELATION_EQUIVALENCE_TIME(relation,node,year,time)$( map_relation_time(relation,node,year,time) )..
-    REL_TIME(relation,node,year,time)
-        =E=
-        SUM(tec,
-        ( relation_new_capacity(relation,node,year,tec) * CAP_NEW(node,tec,year)
-          + relation_total_capacity(relation,node,year,tec)
-            * SUM(vintage$( map_tec_lifetime(node,tec,vintage,year) ), CAP(node,tec,vintage,year) )
-          )$( inv_tec(tec) )
-        + SUM( (location,year_all2,mode)$( map_relation_time(relation,location,year_all2,time) ),
-            relation_activity_time(relation,node,year,location,tec,year_all2,mode,time)
-            * ( SUM(vintage$( map_tec_lifetime(location,tec,vintage,year_all2) ),
-                  ACT(location,tec,vintage,year_all2,mode,time) )
-                  + historical_activity(location,tec,year_all2,mode,time) )
-          )
-      ) ;
-
-*+++ Linear relations of sub-annual timeslice that is accounted at 'year' level
-RELATION_EQUIVALENCE_YEAR(relation,node,year)$( sum (time, map_relation_year(relation,node,year,time) ) )..
-    REL_TIME(relation,node,year,'year')
-        =E=
-        SUM(tec,
-        ( relation_new_capacity(relation,node,year,tec) * CAP_NEW(node,tec,year)
-          + relation_total_capacity(relation,node,year,tec)
-            * SUM(vintage$( map_tec_lifetime(node,tec,vintage,year) ), CAP(node,tec,vintage,year) )
-          )$( inv_tec(tec) )
-        + SUM( (location,year_all2,mode,time) ,
-            relation_activity_time(relation,node,year,location,tec,year_all2,mode,time)
-            * ( SUM(vintage$( map_tec_lifetime(location,tec,vintage,year_all2) ),
-                  ACT(location,tec,vintage,year_all2,mode,time) )
-                  + historical_activity(location,tec,year_all2,mode,time) )
-          )
-      ) ;
-
-RELATION_CONSTRAINT_UP_TIME(relation,node,year,time)$( is_relation_upper_time(relation,node,year,time) )..
-    REL_TIME(relation,node,year,time)
-%SLACK_RELATION_BOUND_UP_TIME% - SLACK_RELATION_BOUND_UP_TIME(relation,node,year,time)
-    =L= relation_upper_time(relation,node,year,time) ;
-
-RELATION_CONSTRAINT_LO_TIME(relation,node,year,time)$( is_relation_lower_time(relation,node,year,time) )..
-    REL_TIME(relation,node,year,time)
-%SLACK_RELATION_BOUND_LO_TIME% + SLACK_RELATION_BOUND_LO_TIME(relation,node,year,time)
-    =G= relation_lower_time(relation,node,year,time) ;
-
 *----------------------------------------------------------------------------------------------------------------------*
 ***
 * .. _gams-storage:
@@ -2213,7 +2148,7 @@ RELATION_CONSTRAINT_LO_TIME(relation,node,year,time)$( is_relation_lower_time(re
 *          - \sum_{\substack{n^L,m,c,h-1 \\ y^V \leq y, (n,t^D,t,l,y) \sim S^{storage}}} input_{n^L,t^D,y^V,y,m,n,c,l,h-1,h}
 *              \cdot ACT_{n^L,t^D,y^V,y,m,h-1} \quad \forall \ t \in T^{STOR}, & \forall \ l \in L^{STOR}
 ***
-STORAGE_CHANGE(node,storage_tec,level_storage,commodity,year,time)$sum(tec, map_tec_storage(node,tec,storage_tec,level_storage,commodity) ) ..
+STORAGE_CHANGE(node,storage_tec,level_storage,commodity,year,time) ..
 * change in the content of storage in the examined timestep
     STORAGE_CHARGE(node,storage_tec,level_storage,commodity,year,time) =E=
 * increase in the content of storage due to the activity of charging technologies
@@ -2221,15 +2156,13 @@ STORAGE_CHANGE(node,storage_tec,level_storage,commodity,year,time)$sum(tec, map_
         map_tec_lifetime(node,tec,vintage,year)
         AND map_tec_storage(node,tec,storage_tec,level_storage,commodity) ),
             output(location,tec,vintage,year,mode,node,commodity,level_storage,time2,time)
-*            * duration_time_rel(time,time2)
-            * ACT(location,tec,vintage,year,mode,time) )
+            * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time) )
 * decrease in the content of storage due to the activity of discharging technologies
         - SUM( (location,vintage,mode,tec,time2)$(
         map_tec_lifetime(node,tec,vintage,year)
         AND map_tec_storage(node,tec,storage_tec,level_storage,commodity) ),
             input(location,tec,vintage,year,mode,node,commodity,level_storage,time2,time)
-*            * duration_time_rel(time,time2)
-            * ACT(location,tec,vintage,year,mode,time) );
+            * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time) );
 
 ***
 * .. _equation_storage_balance:
@@ -2248,8 +2181,8 @@ STORAGE_CHANGE(node,storage_tec,level_storage,commodity,year,time)$sum(tec, map_
 ***
 STORAGE_BALANCE(node,storage_tec,level,commodity,year,time2)$ (
     SUM(tec, map_tec_storage(node,tec,storage_tec,level,commodity) )
-    AND NOT storage_initial(node,storage_tec,level,commodity,year,time2)
-)..
+*    AND NOT storage_initial(node,storage_tec,level,commodity,year,time2)
+        )..
 * Showing the the state of charge of storage at each timestep
     STORAGE(node,storage_tec,level,commodity,year,time2) =E=
 * change in the content of storage in the examined timestep
@@ -2258,57 +2191,38 @@ STORAGE_BALANCE(node,storage_tec,level,commodity,year,time2)$ (
     + SUM((lvl_temporal,time)$map_time_period(year,lvl_temporal,time,time2),
         STORAGE(node,storage_tec,level,commodity,year,time)
 * considering storage self-discharge losses due to keeping the storage media between two subannual timesteps
-        * (1 - storage_self_discharge(node,storage_tec,level,commodity,year,time) )
-* initial content of storage in the examined timestep
-*    + storage_initial(node,storage_tec,level,commodity,year,time2)
-);
+        * (1 - storage_self_discharge(node,storage_tec,level,commodity,year,time) ) ) ;
 
-*$ontext
-STORAGE_BALANCE_INIT(node,storage_tec,level,commodity,year,time)$ (
+STORAGE_BALANCE_INIT(node,storage_tec,level,commodity,year,time, time2)$ (
     SUM(tec, map_tec_storage(node,tec,storage_tec,level,commodity) )
-    AND storage_initial(node,storage_tec,level,commodity,year,time) )..
+    AND SUM( lvl_temporal, map_time_period(year,lvl_temporal,time,time2) )
+    AND storage_initial(node,storage_tec,level,commodity,year,time2) )..
 * Showing the state of charge of storage at a timestep with an initial storage content
     STORAGE(node,storage_tec,level,commodity,year,time) =E=
 * initial content of storage and change in the content of storage in the examined timestep
 * (here the content from the previous time step is not carried over)
-    storage_initial(node,storage_tec,level,commodity,year,time)
-* BZ testing if storage initial can be a % of capacity of storage reservoir
-    * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), CAP(node,storage_tec,vintage,year)  )
-    + STORAGE_CHARGE(node,storage_tec,level,commodity,year,time) ;
+    STORAGE_INIT(node,storage_tec,level,commodity,year,time);
 
 * BZ: new equation: if storage_initial, then the operation should maintain this initial value at the end of the cycle
-STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,year,time,time2)$ (
+STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,year,time, time2)$ (
     SUM(tec, map_tec_storage(node,tec,storage_tec,level,commodity) )
-    AND storage_initial(node,storage_tec,level,commodity,year,time2) )..
+    AND SUM( lvl_temporal, map_time_period(year,lvl_temporal,time,time2) )
+    AND storage_initial(node,storage_tec,level,commodity,year,time2) ) ..
 * Content of storage at the end of the cycle
-        STORAGE(node,storage_tec,level,commodity,year,time) =E=
-        SUM( (lvl_temporal)$map_time_period(year,lvl_temporal,time,time2),
-              storage_initial(node,storage_tec,level,commodity,year,time2)
-           * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), CAP(node,storage_tec,vintage,year)  ) );
+        STORAGE_INIT(node,storage_tec,level,commodity,year,time) =E=
+        storage_initial(node,storage_tec,level,commodity,year,time2)
+        * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), CAP(node,storage_tec,vintage,year)  ) ;
 
 * Connecting an input commodity to maintain the operation of storage container over time (optional)
 STORAGE_INPUT(node,storage_tec,level,commodity,level_storage,commodity2,mode,year,time)$
     ( map_time_commodity_storage(node,storage_tec,level,commodity,mode,year,time) AND
-      sum(tec, map_tec_storage(node,tec,storage_tec,level_storage,commodity2) ) )..
+      SUM( tec, map_tec_storage(node,tec,storage_tec,level_storage,commodity2) ) )..
 
-         STORAGE(node,storage_tec,level_storage,commodity2,year,time)
-*+++ Proposal to relate ACT of dam to ACT of pump + initial storage, instead sum of SOC throughout the year
-$ontext
-        SUM( (tec,location,vintage,time2)$(
-        map_tec_lifetime(node,tec,vintage,year)
-        AND map_tec_storage(node,tec,storage_tec,level_storage,commodity2) ),
-            output(location,tec,vintage,year,mode,node,commodity2,level_storage,time2,time)
-*            * duration_time_rel(time,time2)
-            * ACT(location,tec,vintage,year,mode,time) )
-       + storage_initial(node,storage_tec,level,commodity2,year,time)
-$offtext
-       =E=
+         STORAGE(node,storage_tec,level_storage,commodity2,year,time) =E=
         SUM( (location,vintage,time2)$(map_tec_lifetime(node,storage_tec,vintage,year)$(
               input(location,storage_tec,vintage,year,mode,node,commodity,level,time2,time) ) ),
-*              duration_time_rel(time,time2) *
-              ACT(location,storage_tec,vintage,year,mode,time) )
-;
-*$offtext
+              duration_time_rel(time,time2) * ACT(location,storage_tec,vintage,year,mode,time) );
+
 *----------------------------------------------------------------------------------------------------------------------*
 * model statements                                                                                                     *
 *----------------------------------------------------------------------------------------------------------------------*

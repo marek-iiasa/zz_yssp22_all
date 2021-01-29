@@ -468,15 +468,3 @@ Sets
     map_time_period(year_all,lvl_temporal,time,time2)           mapping of the sequence of sub-annual timesteps (used in storage equations)
     map_time_commodity_storage(node,tec,level,commodity,mode,year_all,time)              mapping of storage containers to their input commodity-level (not commodity-level of stored media)
 ;
-
-*----------------------------------------------------------------------------------------------------------------------*
-* Time-related mapping of relations                                                                            *
-*----------------------------------------------------------------------------------------------------------------------*
-Sets
-    map_relation_time(relation,node,year_all,time)             mapping of relations that should be accounted at subannual timestep level
-    map_relation_year(relation,node,year_all,time)             mapping of relations that should be accounted at year level
-    map_tec_relation(node,relation,tec,year_all,mode,time)     mapping of technologies to relations and periods
-    relation_year(relation)                                    set of relation accounted at year level
-    is_relation_upper_time(relation,node,year_all,time)     flag whether upper bounds exists for generic relation with time index
-    is_relation_lower_time(relation,node,year_all,time)     flag whether lower bounds exists for generic relation with time index
-;
