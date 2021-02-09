@@ -2201,18 +2201,17 @@ STORAGE_BALANCE_INIT(node,storage_tec,level,commodity,year,time, time2)$ (
     STORAGE(node,storage_tec,level,commodity,year,time) =E=
 * initial content of storage and change in the content of storage in the examined timestep
 * (here the content from the previous time step is not carried over)
-    STORAGE_INIT(node,storage_tec,level,commodity,year,time);
+    STORAGE_INIT(node,storage_tec,level,commodity,year,time2);
 
 * BZ: new equation: if storage_initial, then the operation should maintain this initial value at the end of the cycle
-STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,year,time, time2)$ (
+STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,year,time)$ (
     SUM(tec, map_tec_storage(node,tec,storage_tec,level,commodity) )
-    AND SUM( lvl_temporal, map_time_period(year,lvl_temporal,time,time2) )
-    AND storage_initial(node,storage_tec,level,commodity,year,time2) ) ..
+    AND storage_initial(node,storage_tec,level,commodity,year,time) ) ..
 * Content of storage at the end of the cycle
         STORAGE_INIT(node,storage_tec,level,commodity,year,time) =L=
-        storage_initial(node,storage_tec,level,commodity,year,time2)
-        * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), capacity_factor(node,storage_tec,vintage,year,time2)
-             * CAP(node,storage_tec,vintage,year) / duration_time(time2)  ) ;
+        storage_initial(node,storage_tec,level,commodity,year,time)
+        * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), capacity_factor(node,storage_tec,vintage,year,time)
+             * CAP(node,storage_tec,vintage,year) / duration_time(time)  ) ;
 
 * Connecting an input commodity to maintain the operation of storage container over time (optional)
 STORAGE_INPUT(node,storage_tec,level,commodity,level_storage,commodity2,mode,year,time)$
