@@ -242,8 +242,33 @@ MESSAGE_ITEMS = {
     # Initial amount of storage
     "storage_initial": item("par", "n t l c y h"),
     # Storage losses as a percentage of installed capacity
+    'storage_self_discharge': dict(ix_type='par', idx_sets=_idx_common),
     'STORAGE': dict(ix_type='var', idx_sets=_idx_common),
-    "storage_self_discharge": item("par", "n t l c y h"),
+
+    # Time parameters
+    'relation_activity_time':
+        dict(ix_type='par',
+             idx_sets=['relation', 'node', 'year', 'node', 'technology',
+                       'year', 'mode', 'time'],
+             idx_names=
+             ['relation', 'node_rel', 'year_rel', 'node_loc', 'technology',
+              'year_act', 'mode', 'time']),
+    'relation_upper_time':
+        dict(ix_type='par',
+             idx_sets=['relation', 'node', 'year', 'time'],
+             idx_names=['relation', 'node_rel', 'year_rel', 'time']),
+    'relation_lower_time':
+        dict(ix_type='par',
+             idx_sets=['relation', 'node', 'year', 'time'],
+             idx_names=['relation', 'node_rel', 'year_rel', 'time']),
+    'is_relation_upper_time':
+        dict(ix_type='par',
+             idx_sets=['relation', 'node', 'year', 'time'],
+             idx_names=['relation', 'node_rel', 'year_rel', 'time']),
+    'is_relation_lower_time':
+        dict(ix_type='par',
+             idx_sets=['relation', 'node', 'year', 'time'],
+             idx_names=['relation', 'node_rel', 'year_rel', 'time']),
     "subsidy": item("par", "nl type_tec ya"),
     "tax_emission": dict(
         ix_type="par", idx_sets=["node", "type_emission", "type_tec", "type_year"]
