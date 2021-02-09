@@ -244,6 +244,8 @@ MESSAGE_ITEMS = {
     # Storage losses as a percentage of installed capacity
     'storage_self_discharge': dict(ix_type='par', idx_sets=_idx_common),
     'STORAGE': dict(ix_type='var', idx_sets=_idx_common),
+    'STORAGE_CHARGE': dict(ix_type='var', idx_sets=_idx_common),
+    'STORAGE_INIT': dict(ix_type='var', idx_sets=_idx_common),
 
     # Time parameters
     'relation_activity_time':
