@@ -20,8 +20,12 @@
 *----------------------------------------------------------------------------------------------------------------------*
 
 ***
+* .. _section_variable_def:
+*
 * Variable definitions
 * --------------------
+*
+* .. _section_decision_variable_def:
 *
 * Decision variables
 * ^^^^^^^^^^^^^^^^^^
@@ -98,6 +102,8 @@ Positive Variables
     LAND(node,land_scenario,year_all) relative share of land-use scenario
 * content of storage
     STORAGE(node,tec,level,commodity,year_all,time)       state of charge (SoC) of storage at each sub-annual timestep (positive)
+* initial content of storage
+    STORAGE_INIT(node,tec,level,commodity,year_all,time)       initial content of storage (positive)
 ;
 
 Variables
@@ -120,6 +126,8 @@ Variables
 ;
 
 ***
+* .. _section_auxiliary_variable_def:
+*
 * Auxiliary variables
 * ^^^^^^^^^^^^^^^^^^^
 * ==================================================================== ======================================================================================================
@@ -282,8 +290,8 @@ Equations
     STORAGE_CHANGE                  change in the state of charge of storage
     STORAGE_BALANCE                 balance of the state of charge of storage
     STORAGE_BALANCE_INIT            balance of the state of charge of storage at sub-annual time steps with initial storage content
+    STORAGE_EQUIVALENCE             equalizing the content of storage at the end of cycle to the initial content
     STORAGE_INPUT                   connecting an input commodity to maintain the activity of storage container (not stored commodity)
-*    STORAGE_EQUIVALENCE             equalizing the content of storage at the end of cycle to the initial content
 *    EMISSION_EQUIVALENCE_TIME       time dependentauxiliary equation to simplify the notation of emissions
     RELATION_EQUIVALENCE_TIME       time dependent auxiliary equation to simplify the implementation of relations
     RELATION_EQUIVALENCE_YEAR       time dependent auxiliary equation to simplify the implementation of relations at year level
@@ -295,11 +303,15 @@ Equations
 *----------------------------------------------------------------------------------------------------------------------*
 
 ***
+* .. _section_objective:
+*
 * Objective function
 * ------------------
 *
 * The objective function of the |MESSAGEix| core model
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*
+* .. _equation_objective:
 *
 * Equation OBJECTIVE
 * """"""""""""""""""
@@ -320,6 +332,8 @@ OBJECTIVE..
 *
 * Accounting of regional system costs over time
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*
+* .. _equation_cost_accounting_nodal:
 *
 * Equation COST_ACCOUNTING_NODAL
 * """"""""""""""""""""""""""""""
@@ -470,6 +484,8 @@ $offtext
 
 *----------------------------------------------------------------------------------------------------------------------*
 ***
+* .. _section_resource_commodity:
+*
 * Resource and commodity section
 * ------------------------------
 *
@@ -500,6 +516,8 @@ EXTRACTION_EQUIVALENCE(node,commodity,year)..
         * ACT(location,tec,vintage,year,mode,time_act) ) ;
 
 ***
+* .. _equation_extraction_bound_up:
+*
 * Equation EXTRACTION_BOUND_UP
 * """"""""""""""""""""""""""""
 *
@@ -514,6 +532,8 @@ EXTRACTION_BOUND_UP(node,commodity,grade,year)$( map_resource(node,commodity,gra
     EXT(node,commodity,grade,year) =L= bound_extraction_up(node,commodity,grade,year) ;
 
 ***
+* .. _equation_resource_constraint:
+*
 * Equation RESOURCE_CONSTRAINT
 * """"""""""""""""""""""""""""
 *
@@ -538,6 +558,8 @@ RESOURCE_CONSTRAINT(node,commodity,grade,year)$( map_resource(node,commodity,gra
             duration_period(year2) * EXT(node,commodity,grade,year2) ) ) ;
 
 ***
+* .. _equation_resource_horizon:
+*
 * Equation RESOURCE_HORIZON
 * """""""""""""""""""""""""
 * This constraint ensures that total resource extraction over the model horizon does not exceed the available resources.
@@ -633,6 +655,8 @@ COMMODITY_BALANCE_LT(node,commodity,level,year,time)$( map_commodity(node,commod
     =L= 0 ;
 
 ***
+* .. equation_stock_balance:
+*
 * Equation STOCKS_BALANCE
 * """""""""""""""""""""""
 * This constraint ensures the inter-temporal balance of commodity stocks.
@@ -653,6 +677,8 @@ STOCKS_BALANCE(node,commodity,level,year)$( map_stocks(node,commodity,level,year
 
 *----------------------------------------------------------------------------------------------------------------------*
 ***
+* .. _section_technology:
+*
 * Technology section
 * ------------------
 *
@@ -662,6 +688,8 @@ STOCKS_BALANCE(node,commodity,level,year)$( map_stocks(node,commodity,level,year
 * and where installed/maintained capacity is relevant for operational decisions.
 * The set where :math:`T^{INV} \subseteq T` is the set of all these technologies.
 
+*
+* .. _equation_capacity_constraint:
 *
 * Equation CAPACITY_CONSTRAINT
 * """"""""""""""""""""""""""""
@@ -680,6 +708,8 @@ CAPACITY_CONSTRAINT(node,inv_tec,vintage,year,time)$( map_tec_time(node,inv_tec,
         =L= duration_time(time) * capacity_factor(node,inv_tec,vintage,year,time) * CAP(node,inv_tec,vintage,year) ;
 
 ***
+* .. _equation_capacity_maintenance_hist:
+*
 * Equation CAPACITY_MAINTENANCE_HIST
 * """"""""""""""""""""""""""""""""""
 * The following three constraints implement technology capacity maintenance over time to allow early retirment.
@@ -705,6 +735,8 @@ CAPACITY_MAINTENANCE_HIST(node,inv_tec,vintage,first_period)$( map_tec_lifetime(
         duration_period(vintage) * historical_new_capacity(node,inv_tec,vintage) ;
 
 ***
+* .. _equation_capacity_maintenance_new:
+*
 * Equation CAPACITY_MAINTENANCE_NEW
 * """""""""""""""""""""""""""""""""
 * The second constraint ensures that capacity is fully maintained throughout the model period
@@ -726,6 +758,8 @@ CAPACITY_MAINTENANCE_NEW(node,inv_tec,vintage,vintage)$( map_tec_lifetime(node,i
         * duration_period(vintage) * CAP_NEW(node,inv_tec,vintage) ;
 
 ***
+* .. _equation_capacity_maintenance:
+*
 * Equation CAPACITY_MAINTENANCE
 * """""""""""""""""""""""""""""
 * The third constraint implements the dynamics of capacity maintenance throughout the model horizon.
@@ -747,6 +781,8 @@ CAPACITY_MAINTENANCE(node,inv_tec,vintage,year)$( map_tec_lifetime(node,inv_tec,
               CAP(node,inv_tec,vintage,year2) ) ) ;
 
 ***
+* .. _equation_operation_constraint:
+*
 * Equation OPERATION_CONSTRAINT
 * """""""""""""""""""""""""""""
 * This constraint provides an upper bound on the total operation of installed capacity over a year.
@@ -766,6 +802,8 @@ OPERATION_CONSTRAINT(node,inv_tec,vintage,year)$( map_tec_lifetime(node,inv_tec,
         * CAP(node,inv_tec,vintage,year) ;
 
 ***
+* .. _equation_min_utlitation_constraint:
+*
 * Equation MIN_UTILIZATION_CONSTRAINT
 * """""""""""""""""""""""""""""""""""
 * This constraint provides a lower bound on the total utilization of installed capacity over a year.
@@ -783,8 +821,12 @@ MIN_UTILIZATION_CONSTRAINT(node,inv_tec,vintage,year)$( map_tec_lifetime(node,in
 
 *----------------------------------------------------------------------------------------------------------------------*
 ***
+* .. _section_renewable_integration:
+*
 * Constraints representing renewable integration
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*
+* .. _equation_renewables_equivalence:
 *
 * Equation RENEWABLES_EQUIVALENCE
 * """""""""""""""""""""""""""""""
@@ -809,6 +851,8 @@ RENEWABLES_EQUIVALENCE(node,renewable_tec,commodity,year,time)$(
         * ACT(location,renewable_tec,vintage,year,mode,time_act) ) ;
 
 ***
+* .. _equation_renewables_potential_constraint:
+*
 * Equation RENEWABLES_POTENTIAL_CONSTRAINT
 * """"""""""""""""""""""""""""""""""""""""
 * This constraint sets the potential potential by grade as the upper bound for the auxiliary variable :math:`REN`.
@@ -824,6 +868,8 @@ RENEWABLES_POTENTIAL_CONSTRAINT(node,commodity,grade,year)$( map_ren_grade(node,
     =L= SUM(level_renewable, renewable_potential(node,commodity,grade,level_renewable,year) ) ;
 
 ***
+* .. _equation_renewables_capacity_requirement:
+*
 * Equation RENEWABLES_CAPACITY_REQUIREMENT
 * """"""""""""""""""""""""""""""""""""""""
 * This constraint connects the capacity factor of a renewable grade to the
@@ -854,8 +900,12 @@ RENEWABLES_CAPACITY_REQUIREMENT(node,inv_tec,commodity,year)$(
 
 *----------------------------------------------------------------------------------------------------------------------*
 ***
+* .. _section_addon_technologies:
+*
 * Constraints for addon technologies
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*
+* .. _equation_addon_activity_up:
 *
 * Equation ADDON_ACTIVITY_UP
 * """"""""""""""""""""""""""
@@ -891,6 +941,8 @@ ADDON_ACTIVITY_UP(node,type_addon,year,mode,time)..
 ;
 
 ***
+* .. _equation_addon_activity_lo:
+*
 * Equation ADDON_ACTIVITY_LO
 * """"""""""""""""""""""""""
 * This constraint provides a lower bound on the activity of an addon technology that has to be operated
@@ -928,6 +980,8 @@ ADDON_ACTIVITY_LO(node,type_addon,year,mode,time)..
 
 *----------------------------------------------------------------------------------------------------------------------*
 ***
+* .. _section_system_reliability:
+*
 * System reliability and flexibility requirements
 * -----------------------------------------------
 * This section followi allows to include system-wide reliability and flexility considerations.
@@ -937,6 +991,8 @@ ADDON_ACTIVITY_LO(node,type_addon,year,mode,time)..
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * The system reliability and flexibility constraints are implemented using an auxiliary variable representing
 * the total use (i.e., input of each commodity per level).
+*
+* .. _equation_commodity_use_level:
 *
 * Equation COMMODITY_USE_LEVEL
 * """"""""""""""""""""""""""""
@@ -970,6 +1026,8 @@ COMMODITY_USE_LEVEL(node,commodity,level,year,time)$(
 * The capacity and activity of certain (usually non-dispatchable) technologies
 * can be assumed to only partially contribute to the system reliability and flexibility requirements.
 *
+* .. _equation_activity_rating_bin:
+*
 * Equation ACTIVITY_RATING_BIN
 * """"""""""""""""""""""""""""
 * The auxiliary variable for rating-specific activity of each technology cannot exceed
@@ -988,6 +1046,8 @@ ACTIVITY_BY_RATING(node,tec,year,commodity,level,time,rating)$(
 ;
 
 ***
+* .. _equation_activity_share_total:
+*
 * Equation ACTIVITY_SHARE_TOTAL
 * """""""""""""""""""""""""""""
 * The sum of the auxiliary rating-specific activity variables need to equal the total input and/or output
@@ -1028,6 +1088,8 @@ ACTIVITY_RATING_TOTAL(node,tec,vintage,year,commodity,level,time)$(
 * by using the auxiliary variable :math:`ACT\_RATING_{n,t,y^V,y,c,l,h,q}` as a proxy,
 * with the :math:`reliability\_factor_{n,t,y,c,l,h,q}` defined per rating bin :math:`q`.
 *
+* .. _equation_firm_capacity_provision:
+*
 * Equation FIRM_CAPACITY_PROVISION
 * """"""""""""""""""""""""""""""""
 * Technologies where the reliability factor is defined with the rating `firm`
@@ -1052,6 +1114,8 @@ FIRM_CAPACITY_PROVISION(node,inv_tec,year,commodity,level,time)$(
         * CAP(node,inv_tec,vintage,year) ) ;
 
 ***
+* .. _equation_system_reliability_constraint:
+*
 * Equation SYSTEM_RELIABILITY_CONSTRAINT
 * """"""""""""""""""""""""""""""""""""""
 * This constraint ensures that there is sufficient firm (dispatchable) capacity in each period.
@@ -1126,8 +1190,12 @@ ACT.LO(node,tec,vintage,year,mode,time)$sum(
     (commodity,level,rating), flexibility_factor(node,tec,vintage,year,mode,commodity,level,time,rating) ) = 0 ;
 
 ***
+* .. _section_bounds_capacity_activity:
+*
 * Bounds on capacity and activity
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*
+* .. _equation_new_capacity_bound_up:
 *
 * Equation NEW_CAPACITY_BOUND_UP
 * """"""""""""""""""""""""""""""
@@ -1143,6 +1211,8 @@ NEW_CAPACITY_BOUND_UP(node,inv_tec,year)$( is_bound_new_capacity_up(node,inv_tec
 ;
 
 ***
+* .. _equation_new_capacity_bound_lo:
+*
 * Equation NEW_CAPACITY_BOUND_LO
 * """"""""""""""""""""""""""""""
 * This constraint provides lower bounds on new capacity installation.
@@ -1157,6 +1227,8 @@ NEW_CAPACITY_BOUND_LO(node,inv_tec,year)$( is_bound_new_capacity_lo(node,inv_tec
 ;
 
 ***
+* .. _equation_total_capacity_bound_up:
+*
 * Equation TOTAL_CAPACITY_BOUND_UP
 * """"""""""""""""""""""""""""""""
 * This constraint gives upper bounds on the total installed capacity of a technology in a specific year of operation
@@ -1174,6 +1246,8 @@ TOTAL_CAPACITY_BOUND_UP(node,inv_tec,year)$( is_bound_total_capacity_up(node,inv
 ;
 
 ***
+* .. _equation_total_capacity_bound_lo:
+*
 * Equation TOTAL_CAPACITY_BOUND_LO
 * """"""""""""""""""""""""""""""""
 * This constraint gives lower bounds on the total installed capacity of a technology.
@@ -1213,6 +1287,8 @@ ACTIVITY_BOUND_UP(node,tec,year,mode,time)$(
 ;
 
 ***
+* .. _equation_activity_bound_all_modes_up:
+*
 * Equation ACTIVITY_BOUND_ALL_MODES_UP
 * """"""""""""""""""""""""""""""""""""
 * This constraint provides upper bounds of a technology activity across all modes and vintages.
@@ -1256,6 +1332,8 @@ ACTIVITY_BOUND_LO(node,tec,year,mode,time)$( map_tec_act(node,tec,year,mode,time
 ;
 
 ***
+* .. _equation_activity_bound_all_modes_lo:
+*
 * Equation ACTIVITY_BOUND_ALL_MODES_LO
 * """"""""""""""""""""""""""""""""""""
 * This constraint provides lower bounds of a technology activity across all modes and vintages.
@@ -1287,6 +1365,8 @@ ACTIVITY_BOUND_ALL_MODES_LO(node,tec,year,time)$( bound_activity_lo(node,tec,yea
 *
 * Share constraints on activity by mode
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* .. _equation_shares_mode_up:
+*
 * Equation SHARES_MODE_UP
 * """""""""""""""""""""""
 * This constraint provides upper bounds of the share of the activity of one mode
@@ -1317,6 +1397,8 @@ SHARE_CONSTRAINT_MODE_UP(shares,node,tec,mode,year,time)$(
     ) ;
 
 ***
+* .. _equation_shares_mode_lo:
+*
 * Equation SHARES_MODE_LO
 * """""""""""""""""""""""
 * This constraint provides lower bounds of the share of the activity of one mode of a technology.
@@ -1345,6 +1427,8 @@ SHARE_CONSTRAINT_MODE_LO(shares,node,tec,mode,year,time)$(
     ) ;
 
 ***
+* .. _section_share_constraints_commodities:
+*
 * Share constraints on commodities
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * These constraints allow to set upper and lower bound on the quantity of commodities produced or consumed by a group
@@ -1356,6 +1440,8 @@ SHARE_CONSTRAINT_MODE_LO(shares,node,tec,mode,year,time)$(
 * The notation :math:`P^{share}` represents the mapping set `map_shares_commodity_share` denoting all technology types,
 * nodes, commodities and levels to be included in the numerator, and :math:`P^{total}` is
 * the equivalent mapping set `map_shares_commodity_total` for the denominator.
+*
+* .. _equation_share_constraint_commodity_up:
 *
 * Equation SHARE_CONSTRAINT_COMMODITY_UP
 * """"""""""""""""""""""""""""""""""""""
@@ -1406,6 +1492,8 @@ SHARE_CONSTRAINT_COMMODITY_UP(shares,node_share,year,time)$( share_commodity_up(
     ) ) ;
 
 ***
+* .. _equation_share_constraint_commodity_lo:
+*
 * Equation SHARE_CONSTRAINT_COMMODITY_LO
 * """"""""""""""""""""""""""""""""""""""
 *   .. math::
@@ -1465,6 +1553,8 @@ SHARE_CONSTRAINT_COMMODITY_LO(shares,node_share,year,time)$( share_commodity_lo(
 * The formulation directly includes the option for 'soft' relaxations of dynamic constraints
 * (cf. Keppo and Strubegger, 2010 :cite:`keppo_short_2010`).
 *
+* .. _equation_new_capacity_constraint_up:
+*
 * Equation NEW_CAPACITY_CONSTRAINT_UP
 * """""""""""""""""""""""""""""""""""
 * The level of new capacity additions cannot be greater than an initial value (compounded over the period duration),
@@ -1511,6 +1601,8 @@ NEW_CAPACITY_CONSTRAINT_UP(node,inv_tec,year)$( map_tec(node,inv_tec,year)
 * new capacity. If one would sum over `year2`, periods prior to the first model year would be ignored.
 
 ***
+* .. _equation_new_capacity_soft_constraint_up:
+*
 * Equation NEW_CAPACITY_SOFT_CONSTRAINT_UP
 * """"""""""""""""""""""""""""""""""""""""
 * This constraint ensures that the relaxation of the dynamic constraint on new capacity (investment) does not exceed
@@ -1524,6 +1616,8 @@ NEW_CAPACITY_SOFT_CONSTRAINT_UP(node,inv_tec,year)$( soft_new_capacity_up(node,i
     CAP_NEW_UP(node,inv_tec,year) =L= CAP_NEW(node,inv_tec,year) ;
 
 ***
+* .. _equation_new_capacity_constraint_lo:
+*
 * Equation NEW_CAPACITY_CONSTRAINT_LO
 * """""""""""""""""""""""""""""""""""
 * This constraint gives dynamic lower bounds on new capacity.
@@ -1564,6 +1658,8 @@ NEW_CAPACITY_CONSTRAINT_LO(node,inv_tec,year)$( map_tec(node,inv_tec,year)
 ;
 
 ***
+* .. _equation_new_capacity_soft_constraint_lo:
+*
 * Equation NEW_CAPACITY_SOFT_CONSTRAINT_LO
 * """"""""""""""""""""""""""""""""""""""""
 * This constraint ensures that the relaxation of the dynamic constraint on new capacity does not exceed
@@ -1577,6 +1673,8 @@ NEW_CAPACITY_SOFT_CONSTRAINT_LO(node,inv_tec,year)$( soft_new_capacity_lo(node,i
     CAP_NEW_LO(node,inv_tec,year) =L= CAP_NEW(node,inv_tec,year) ;
 
 ***
+* .. _equation_activity_constraint_up:
+*
 * Equation ACTIVITY_CONSTRAINT_UP
 * """""""""""""""""""""""""""""""
 * This constraint gives dynamic upper bounds on the market penetration of a technology activity.
@@ -1621,6 +1719,8 @@ ACTIVITY_CONSTRAINT_UP(node,tec,year,time)$( map_tec_time(node,tec,year,time)
 ;
 
 ***
+* .. _equation_activity_soft_constraint_up:
+*
 * Equation ACTIVITY_SOFT_CONSTRAINT_UP
 * """"""""""""""""""""""""""""""""""""
 * This constraint ensures that the relaxation of the dynamic activity constraint does not exceed the
@@ -1680,6 +1780,8 @@ ACTIVITY_CONSTRAINT_LO(node,tec,year,time)$( map_tec_time(node,tec,year,time)
 ;
 
 ***
+* .. _equation_activity_soft_constraint_lo:
+*
 * Equation ACTIVITY_SOFT_CONSTRAINT_LO
 * """"""""""""""""""""""""""""""""""""
 * This constraint ensures that the relaxation of the dynamic activity constraint does not exceed the
@@ -1696,11 +1798,15 @@ ACTIVITY_SOFT_CONSTRAINT_LO(node,tec,year,time)$( soft_activity_lo(node,tec,year
 
 *----------------------------------------------------------------------------------------------------------------------*
 ***
+* .. _section_emission:
+*
 * Emission section
 * ----------------
 *
 * Auxiliary variable for aggregate emissions
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*
+* .. _equation_emission_equivalence:
 *
 * Equation EMISSION_EQUIVALENCE
 * """""""""""""""""""""""""""""
@@ -1767,11 +1873,15 @@ EMISSION_CONSTRAINT(node,type_emission,type_tec,type_year)$is_bound_emission(nod
 
 *----------------------------------------------------------------------------------------------------------------------*
 ***
+* .. _section_landuse_emulator:
+*
 * Land-use model emulator section
 * -------------------------------
 *
 * Bounds on total land use
 * ^^^^^^^^^^^^^^^^^^^^^^^^
+*
+* .. _equation_land_constraint:
 *
 * Equation LAND_CONSTRAINT
 * """"""""""""""""""""""""
@@ -1790,6 +1900,8 @@ LAND_CONSTRAINT(node,year)$( SUM(land_scenario$( map_land(node,land_scenario,yea
 * Dynamic constraints on land use
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * These constraints enforces upper and lower bounds on the change rate per land scenario.
+*
+* .. _equation_dynamic_land_scen_constraint_up:
 *
 * Equation DYNAMIC_LAND_SCEN_CONSTRAINT_UP
 * """"""""""""""""""""""""""""""""""""""""
@@ -1824,6 +1936,8 @@ DYNAMIC_LAND_SCEN_CONSTRAINT_UP(node,land_scenario,year)$( map_land(node,land_sc
 ;
 
 ***
+* .. _equation_dynamic_land_scen_constraint_lo:
+*
 * Equation DYNAMIC_LAND_SCEN_CONSTRAINT_LO
 * """"""""""""""""""""""""""""""""""""""""
 *
@@ -1859,6 +1973,8 @@ DYNAMIC_LAND_SCEN_CONSTRAINT_LO(node,land_scenario,year)$( map_land(node,land_sc
 ***
 * These constraints enforces upper and lower bounds on the change rate per land type
 * determined as a linear combination of land use scenarios.
+*
+* .. _equation_dynamic_land_type_constraint_up:
 *
 * Equation DYNAMIC_LAND_TYPE_CONSTRAINT_UP
 * """"""""""""""""""""""""""""""""""""""""
@@ -1899,6 +2015,8 @@ DYNAMIC_LAND_TYPE_CONSTRAINT_UP(node,year,land_type)$( is_dynamic_land_up(node,y
 ;
 
 ***
+* .. _equation_dynamic_land_type_constraint_lo:
+*
 * Equation DYNAMIC_LAND_TYPE_CONSTRAINT_LO
 * """"""""""""""""""""""""""""""""""""""""
 *
@@ -1950,6 +2068,8 @@ DYNAMIC_LAND_TYPE_CONSTRAINT_LO(node,year,land_type)$( is_dynamic_land_lo(node,y
 * Auxiliary variable for left-hand side
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 *
+* .. _equation_relation_equivalence:
+*
 * Equation RELATION_EQUIVALENCE
 * """""""""""""""""""""""""""""
 *   .. math::
@@ -1983,6 +2103,8 @@ RELATION_EQUIVALENCE(relation,node,year)..
 * Upper and lower bounds on user-defined relations
 * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 *
+* .. _equation_relation_constraint_up:
+*
 * Equation RELATION_CONSTRAINT_UP
 * """""""""""""""""""""""""""""""
 *   .. math::
@@ -1994,6 +2116,8 @@ RELATION_CONSTRAINT_UP(relation,node,year)$( is_relation_upper(relation,node,yea
     =L= relation_upper(relation,node,year) ;
 
 ***
+* .. _equation_relation_constraint_lo:
+*
 * Equation RELATION_CONSTRAINT_LO
 * """""""""""""""""""""""""""""""
 *   .. math::
@@ -2070,6 +2194,8 @@ RELATION_CONSTRAINT_LO_TIME(relation,node,year,time)$( is_relation_lower_time(re
 * one time step (represented by `Equation STORAGE_CHANGE`_), the state of charge in the previous
 * time step, and storage losses between two consecutive time steps.
 *
+* .. _equation_storage_change:
+*
 * Equation STORAGE_CHANGE
 * """""""""""""""""""""""
 * This equation shows the change in the content of the storage container in each
@@ -2108,6 +2234,8 @@ STORAGE_CHANGE(node,storage_tec,level_storage,commodity,year,time)$sum(tec, map_
             * ACT(location,tec,vintage,year,mode,time) );
 
 ***
+* .. _equation_storage_balance:
+*
 * Equation STORAGE_BALANCE
 * """"""""""""""""""""""""
 *
@@ -2122,8 +2250,8 @@ STORAGE_CHANGE(node,storage_tec,level_storage,commodity,year,time)$sum(tec, map_
 ***
 STORAGE_BALANCE(node,storage_tec,level,commodity,year,time2)$ (
     SUM(tec, map_tec_storage(node,tec,storage_tec,level,commodity) )
-    AND NOT storage_initial(node,storage_tec,level,commodity,year,time2)
-)..
+*    AND NOT storage_initial(node,storage_tec,level,commodity,year,time2)
+        )..
 * Showing the the state of charge of storage at each timestep
     STORAGE(node,storage_tec,level,commodity,year,time2) =E=
 * change in the content of storage in the examined timestep
@@ -2137,29 +2265,26 @@ STORAGE_BALANCE(node,storage_tec,level,commodity,year,time2)$ (
 *    + storage_initial(node,storage_tec,level,commodity,year,time2)
 );
 
-*$ontext
-STORAGE_BALANCE_INIT(node,storage_tec,level,commodity,year,time)$ (
+STORAGE_BALANCE_INIT(node,storage_tec,level,commodity,year,time, time2)$ (
     SUM(tec, map_tec_storage(node,tec,storage_tec,level,commodity) )
-    AND storage_initial(node,storage_tec,level,commodity,year,time) )..
+    AND SUM( lvl_temporal, map_time_period(year,lvl_temporal,time,time2) )
+    AND storage_initial(node,storage_tec,level,commodity,year,time2) )..
 * Showing the state of charge of storage at a timestep with an initial storage content
     STORAGE(node,storage_tec,level,commodity,year,time) =E=
 * initial content of storage and change in the content of storage in the examined timestep
 * (here the content from the previous time step is not carried over)
-    storage_initial(node,storage_tec,level,commodity,year,time)
-* BZ testing if storage initial can be a % of capacity of storage reservoir
-*    * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), CAP(node,storage_tec,vintage,year)  )
-    + STORAGE_CHARGE(node,storage_tec,level,commodity,year,time) ;
-$ontext
+    STORAGE_INIT(node,storage_tec,level,commodity,year,time2);
+
 * BZ: new equation: if storage_initial, then the operation should maintain this initial value at the end of the cycle
-STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,year,time,time2)$ (
+STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,year,time)$ (
     SUM(tec, map_tec_storage(node,tec,storage_tec,level,commodity) )
-    AND storage_initial(node,storage_tec,level,commodity,year,time2) )..
+    AND storage_initial(node,storage_tec,level,commodity,year,time) ) ..
 * Content of storage at the end of the cycle
-        STORAGE(node,storage_tec,level,commodity,year,time) =E=
-        SUM( (lvl_temporal)$map_time_period(year,lvl_temporal,time,time2),
-              storage_initial(node,storage_tec,level,commodity,year,time2)
-           * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), CAP(node,storage_tec,vintage,year)  ) );
-$offtext
+        STORAGE_INIT(node,storage_tec,level,commodity,year,time) =L=
+        storage_initial(node,storage_tec,level,commodity,year,time)
+        * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), capacity_factor(node,storage_tec,vintage,year,time)
+             * CAP(node,storage_tec,vintage,year) / duration_time(time)  ) ;
+
 * Connecting an input commodity to maintain the operation of storage container over time (optional)
 STORAGE_INPUT(node,storage_tec,level,commodity,level_storage,commodity2,mode,year,time)$
     ( map_time_commodity_storage(node,storage_tec,level,commodity,mode,year,time) AND
