@@ -2209,9 +2209,10 @@ STORAGE_EQUIVALENCE(node,storage_tec,level,commodity,year,time, time2)$ (
     AND SUM( lvl_temporal, map_time_period(year,lvl_temporal,time,time2) )
     AND storage_initial(node,storage_tec,level,commodity,year,time2) ) ..
 * Content of storage at the end of the cycle
-        STORAGE_INIT(node,storage_tec,level,commodity,year,time) =E=
+        STORAGE_INIT(node,storage_tec,level,commodity,year,time) =L=
         storage_initial(node,storage_tec,level,commodity,year,time2)
-        * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), CAP(node,storage_tec,vintage,year)  ) ;
+        * SUM(vintage$( map_tec_lifetime(node,storage_tec,vintage,year) ), capacity_factor(node,storage_tec,vintage,year,time2)
+             * CAP(node,storage_tec,vintage,year) / duration_time(time2)  ) ;
 
 * Connecting an input commodity to maintain the operation of storage container over time (optional)
 STORAGE_INPUT(node,storage_tec,level,commodity,level_storage,commodity2,mode,year,time)$
