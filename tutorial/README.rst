@@ -104,6 +104,8 @@ uses it to illustrate a range of framework features.
       a certain share of total electricity generation (`westeros_share_constraint.ipynb`_).
    #. Add a fossil-resource supply curve for the coal power plant,
       (`westeros_fossil_resource.ipynb`_).
+   #. Build the baseline scenario using data stored in xlsx files to populate sets and
+      parameters (`westeros_baseline_using_xlsx_import.ipynb`_).
    #. After the MESSAGE model has solved, use the :mod:`.message_ix.reporting`
       module to ‘report’ results, e.g. do post-processing, plotting, and other
       calculations (`westeros_report.ipynb`_).
@@ -116,6 +118,7 @@ uses it to illustrate a range of framework features.
 .. _westeros_seasonality.ipynb:         https://github.com/iiasa/message_ix/blob/master/tutorial/westeros/westeros_seasonality.ipynb
 .. _westeros_share_constraint.ipynb:    https://github.com/iiasa/message_ix/blob/master/tutorial/westeros/westeros_share_constraint.ipynb
 .. _westeros_fossil_resource.ipynb:     https://github.com/iiasa/message_ix/blob/master/tutorial/westeros/westeros_fossil_resource.ipynb
+.. _westeros_baseline_using_xlsx_import.ipynb:     https://github.com/iiasa/message_ix/blob/master/tutorial/westeros/westeros_baseline_using_xlsx_import.ipynb
 .. _westeros_report.ipynb:              https://github.com/iiasa/message_ix/blob/master/tutorial/westeros/westeros_report.ipynb
 
 
