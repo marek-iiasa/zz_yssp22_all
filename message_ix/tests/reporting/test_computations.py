@@ -11,14 +11,15 @@ from message_ix.testing import SCENARIO
 def test_as_pyam(message_test_mp):
     scen = Scenario(message_test_mp, **SCENARIO["dantzig"])
     if not scen.has_solution():
-        scen.solve()
+        scen.solve(quiet=True)
     rep = Reporter.from_scenario(scen)
 
     # Quantities for 'ACT' variable at full resolution
     qty = rep.get(rep.full_key("ACT"))
 
     # Call as_pyam() with an empty quantity
-    p = computations.as_pyam(scen, qty[0:0], year_time_dim="ya")
+    as_pyam = rep.get_comp("as_pyam")
+    p = as_pyam(scen, qty[0:0], rename=dict(nl="region", ya="year"))
     assert isinstance(p, pyam.IamDataFrame)
 
 
@@ -26,13 +27,7 @@ def test_concat(dantzig_reporter):
     """pyam.concat() correctly passes through to ixmp…concat()."""
     rep = dantzig_reporter
 
-    key = rep.add(
-        "test",
-        computations.concat,
-        "fom:nl-t-ya",
-        "vom:nl-t-ya",
-        "tom:nl-t-ya",
-    )
+    key = rep.add("concat", "test", "fom:nl-t-ya", "vom:nl-t-ya", "tom:nl-t-ya")
     rep.get(key)
 
 

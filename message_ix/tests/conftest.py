@@ -1,18 +1,11 @@
 from pathlib import Path
 
+import pint
 import pytest
 from click.testing import CliRunner
 
 import message_ix
 from message_ix.testing import SCENARIO, make_dantzig
-
-# Hooks
-
-
-def pytest_report_header(config, startdir):
-    """Add the message_ix import path to the pytest report header."""
-    return "message_ix location: {}".format(Path(message_ix.__file__).parent)
-
 
 # Fixtures
 
@@ -53,9 +46,33 @@ def message_test_mp(test_mp):
     yield test_mp
 
 
+@pytest.fixture(scope="session")
+def ureg():
+    """Session-scoped :class:`pint.UnitRegistry` with units needed by tests."""
+    registry = pint.get_application_registry()
+
+    for unit in "USD", "case":
+        try:
+            registry.define(f"{unit} = [{unit}]")
+        except pint.DefinitionSyntaxError:
+            # Already defined
+            pass
+
+    yield registry
+
+
 @pytest.fixture
-def dantzig_reporter(message_test_mp):
+def dantzig_reporter(message_test_mp, ureg):
     scen = message_ix.Scenario(message_test_mp, **SCENARIO["dantzig"])
+
     if not scen.has_solution():
-        scen.solve()
-    yield message_ix.Reporter.from_scenario(scen)
+        scen.solve(quiet=True)
+
+    rep = message_ix.Reporter.from_scenario(scen)
+
+    # The Dantzig model has no data in fix_cost, which creates an error adding the
+    # derived keys <fom:nl-t-yv-ya> and <vom:nl-t-yv-ya> because the former has no
+    # units. Force application of units to this empty quantity.
+    rep.configure(units=dict(apply=dict(fix_cost="USD/case")))
+
+    yield rep
