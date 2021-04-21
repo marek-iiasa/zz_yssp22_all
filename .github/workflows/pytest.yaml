@@ -7,7 +7,6 @@ on:
     branches: [ master ]
 
 env:
-  GAMS_VERSION: 25.1.1
   # See description in lint.yml
   depth: 100
 
@@ -107,18 +106,12 @@ jobs:
           ${{ matrix.os }}-gams${{ env.GAMS_VERSION }}-
           ${{ matrix.os }}-
 
-    - name: Install GAMS and Graphviz
-      # Use the scripts from the checked-out ixmp repo
-      env:
-        CI_OS: ${{ matrix.os }}
-      run: |
-        ixmp/ci/install-gams.sh
-        ixmp/ci/install-graphviz.sh
-      shell: bash
+    - uses: iiasa/actions/setup-gams@main
+      with:
+        version: 25.1.1
+        license: ${{ secrets.GAMS_LICENSE }}
 
-    - name: Check GAMS
-      run: gams
-      shell: bash
+    - uses: ts-graphviz/setup-graphviz@v1
 
     - name: Upgrade pip, wheel, setuptools-scm
       run: python -m pip install --upgrade pip wheel setuptools-scm
@@ -149,7 +142,10 @@ jobs:
         # For test_cli.test_dl; see code in message_ix.cli.dl
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       working-directory: message_ix
-      run: pytest message_ix -m "not nightly" -rA --verbose --cov-report=xml --color=yes
+      # Work around iiasa/ixmp#411
+      run: |
+        pytest message_ix -m "not nightly" -rA --verbose --cov-report=xml --color=yes || ( [ $? -eq 127 -a "${{ runner.os }}" = "Windows" ] && echo "Spurious exit code 127 from pytest" && exit 0)
+      shell: bash
 
     - name: Run R CMD check
       run: |
