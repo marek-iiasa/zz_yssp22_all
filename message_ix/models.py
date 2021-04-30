@@ -266,11 +266,11 @@ MESSAGE_ITEMS = {
              idx_sets=['relation', 'node', 'year', 'time'],
              idx_names=['relation', 'node_rel', 'year_rel', 'time']),
     'is_relation_upper_time':
-        dict(ix_type='par',
+        dict(ix_type='set',
              idx_sets=['relation', 'node', 'year', 'time'],
              idx_names=['relation', 'node_rel', 'year_rel', 'time']),
     'is_relation_lower_time':
-        dict(ix_type='par',
+        dict(ix_type='set',
              idx_sets=['relation', 'node', 'year', 'time'],
              idx_names=['relation', 'node_rel', 'year_rel', 'time']),
 }
