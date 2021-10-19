@@ -60,3 +60,11 @@ htmlcov
 
 # JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm
 /**/.idea
+
+message_ix/model/225b/
+
+message_ix/model/225d/
+
+message_ix/model/225c/
+
+message_ix/model/cplex.opt
