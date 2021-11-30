@@ -167,7 +167,8 @@ def storage_setup(test_mp, time_duration, comment):
     df["value"] = 1.2
     scen.add_par("input", df)
     scen.commit("storage needs no separate input")
-    scen.solve(case="with_storage_and_input" + comment, quiet=True)
+    scen.solve(case="with_storage_and_input" + comment, var_list=["STORAGE", "STORAGE_CHARGE"],
+               quiet=True)
     cost_with_stor = scen.var("OBJ")["lvl"]
     act_with_stor = scen.var("ACT", {"technology": "gas_ppl"})["lvl"].sum()
 
@@ -219,9 +220,10 @@ def storage_setup(test_mp, time_duration, comment):
         assert max(scen.var("STORAGE")["lvl"]) <= max_stor
 
         # 3. Commodity balance: charge - discharge - losses = 0
-        change = scen.var("STORAGE_CHARGE").set_index(["year_act", "time"])["lvl"]
+        change = scen.var("STORAGE_CHARGE").set_index(["year", "time"])["lvl"]
         loss = scen.par("storage_self_discharge").set_index(["year", "time"])["value"]
-        assert sum(change[change > 0] * (1 - loss)) == -sum(change[change < 0])
+        loss = loss[loss.index.isin(change[change > 0].index)]
+        assert sum(change[change > 0] * (1 - loss)) >= -sum(change[change < 0])
 
         # 4. Energy balance: storage change + losses = storage content
         storage = scen.var("STORAGE").set_index(["year", "time"])["lvl"]
