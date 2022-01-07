@@ -45,7 +45,7 @@ $ONGLOBAL
 *----------------------------------------------------------------------------------------------------------------------*
 
 ** scenario/case selection - this must match the name of the MsgData_<%%%>.gdx input data file **
-$SETGLOBAL data "MESSAGE_CASm__baseline_elec_stor__v7"
+$SETGLOBAL data "MESSAGEix-R12_baseline_rtpv_v45"
 
 ** MACRO mode
 * "none": MESSAGEix is run in stand-alone mode
@@ -80,10 +80,10 @@ $SETGLOBAL SLACK_COMMODITY_EQUIVALENCE "*"
 
 $SETGLOBAL SLACK_CAP_NEW_BOUND_UP "*"
 $SETGLOBAL SLACK_CAP_NEW_BOUND_LO "*"
-$SETGLOBAL SLACK_CAP_TOTAL_BOUND_UP ""
-$SETGLOBAL SLACK_CAP_TOTAL_BOUND_LO ""
-$SETGLOBAL SLACK_CAP_NEW_DYNAMIC_UP ""
-$SETGLOBAL SLACK_CAP_NEW_DYNAMIC_LO ""
+$SETGLOBAL SLACK_CAP_TOTAL_BOUND_UP "*"
+$SETGLOBAL SLACK_CAP_TOTAL_BOUND_LO "*"
+$SETGLOBAL SLACK_CAP_NEW_DYNAMIC_UP "*"
+$SETGLOBAL SLACK_CAP_NEW_DYNAMIC_LO "*"
 
 $SETGLOBAL SLACK_ACT_BOUND_UP ""
 $SETGLOBAL SLACK_ACT_BOUND_LO ""
@@ -98,8 +98,8 @@ $SETGLOBAL SLACK_LAND_TYPE_LO "*"
 $SETGLOBAL SLACK_RELATION_BOUND_UP "*"
 $SETGLOBAL SLACK_RELATION_BOUND_LO "*"
 
-$SETGLOBAL SLACK_RELATION_BOUND_UP_TIME  ""
-$SETGLOBAL SLACK_RELATION_BOUND_LO_TIME  ""
+$SETGLOBAL SLACK_RELATION_BOUND_UP_TIME  "*"
+$SETGLOBAL SLACK_RELATION_BOUND_LO_TIME  "*"
 
 *----------------------------------------------------------------------------------------------------------------------*
 * launch the MESSAGEix or MESSAGEix-MACRO run file with the settings as defined above                                      *
