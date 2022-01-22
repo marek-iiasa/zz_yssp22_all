@@ -73,7 +73,7 @@ def item(ix_type, expr):
 # NB order by ix_type (set, par, var, equ), then alphabetically.
 #: List of ixmp items for MESSAGE.
 _idx_common = [
-    'node', 'technology', 'mode', 'level', 'commodity', 'year', 'time']
+    'node', 'technology', 'mode', 'level', 'commodity', 'year', 'time', 'lvl_temporal']
 MESSAGE_ITEMS = {
     # Index sets
     "commodity": dict(ix_type="set"),
@@ -134,9 +134,9 @@ MESSAGE_ITEMS = {
     "map_tec_storage": dict(
         ix_type="set",
         idx_sets=["node", "technology", "mode", "technology",
-                  "mode", "level", "commodity"],
+                  "mode", "level", "commodity", "lvl_temporal"],
         idx_names=["node", "technology", "mode", "storage_tec",
-                   "storage_mode", "level", "commodity"]
+                   "storage_mode", "level", "commodity", "lvl_temporal"]
         ),
     "map_temporal_hierarchy": dict(
         ix_type="set",
@@ -248,7 +248,7 @@ MESSAGE_ITEMS = {
     "soft_new_capacity_lo": item("par", "nl t yv"),
     "soft_new_capacity_up": item("par", "nl t yv"),
     # Initial amount of storage
-    "storage_initial": item("par", "n t m l c y h"),
+    "storage_initial": item("par", "n t m l c y h lvl_temporal"),
     "time_order": dict(ix_type='par', idx_sets=["lvl_temporal", "time"]),
     # Storage losses as a percentage of installed capacity
     'storage_self_discharge': dict(ix_type='par', idx_sets=_idx_common),
