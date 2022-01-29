@@ -73,7 +73,7 @@ def item(ix_type, expr):
 # NB order by ix_type (set, par, var, equ), then alphabetically.
 #: List of ixmp items for MESSAGE.
 _idx_common = [
-    'node', 'technology', 'mode', 'level', 'commodity', 'year', 'time', 'lvl_temporal']
+    'node', 'technology', 'mode', 'level', 'commodity', 'year', 'time']
 MESSAGE_ITEMS = {
     # Index sets
     "commodity": dict(ix_type="set"),
@@ -248,7 +248,7 @@ MESSAGE_ITEMS = {
     "soft_new_capacity_lo": item("par", "nl t yv"),
     "soft_new_capacity_up": item("par", "nl t yv"),
     # Initial amount of storage
-    "storage_initial": item("par", "n t m l c y h lvl_temporal"),
+    "storage_initial": item("par", "n t m l c y h"),
     "time_order": dict(ix_type='par', idx_sets=["lvl_temporal", "time"]),
     # Storage losses as a percentage of installed capacity
     'storage_self_discharge': dict(ix_type='par', idx_sets=_idx_common),
