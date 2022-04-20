@@ -32,8 +32,9 @@ beyond_horizon_lifetime(node,inv_tec,vintage)$( beyond_horizon_lifetime(node,inv
 * disabled if the levelized costs are negative!
 ***
 
-levelized_cost(node,tec,year,time)$( map_tec_time(node,tec,year,time) AND inv_tec(tec) ) =
-    inv_cost(node,tec,year)
+levelized_cost(node,tec,year,time)$( map_tec_time(node,tec,year,time) AND ( inv_tec(tec) OR
+       sum( (relation,node2,mode), relation_cost(relation,node,year)$relation_activity(relation,node2,year,node,tec,year,mode) ) ) ) =
+    (inv_cost(node,tec,year)
         * (
 * compute discounted annualized investment costs if interest rate > 0
             ( interestrate(year)
@@ -42,13 +43,17 @@ levelized_cost(node,tec,year,time)$( map_tec_time(node,tec,year,time) AND inv_te
               )$( interestrate(year) )
 * if interest rate = 0, annualized investment costs are total investment costs divided by technical lifetime
             + ( 1 / technical_lifetime(node,tec,year) )$( interestrate(year) eq 0 )
-          )
+          ) )$( inv_tec(tec) )
 * add (proportional) fixed and variable costs, assuming that these remain constant over the technical lifetime
     + ( fix_cost(node,tec,year,year) /
           sum(time2$( map_tec_time(node,tec,year,time2) ),
              duration_time(time2) * capacity_factor(node,tec,year,year,time2) )
         )$( fix_cost(node,tec,year,year) )
     + sum(mode$( map_tec_act(node,tec,year,mode,time) ), var_cost(node,tec,year,year,mode,time) )
+
+* add section related to 'relation_cost'
+    + sum( (mode,relation,node2)$( map_tec_act(node,tec,year,mode,time) ),
+          relation_cost(relation,node,year) * relation_activity(relation,node2,year,node,tec,year,mode) )
 ;
 
 * the soft relaxations of the dynamic activity constraints are disabled if the levelized costs are negative
