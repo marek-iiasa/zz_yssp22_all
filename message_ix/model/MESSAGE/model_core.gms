@@ -2173,13 +2173,13 @@ STORAGE_CHANGE(node,storage_tec,level_storage,commodity,year,time) ..
         map_tec_lifetime(node,tec,vintage,year)
         AND map_tec_storage(node,tec,storage_tec,level_storage,commodity) ),
             output(location,tec,vintage,year,mode,node,commodity,level_storage,time2,time)
-            * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time) )
+            * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time2) )
 * decrease in the content of storage due to the activity of discharging technologies
         - SUM( (location,vintage,mode,tec,time2)$(
         map_tec_lifetime(node,tec,vintage,year)
         AND map_tec_storage(node,tec,storage_tec,level_storage,commodity) ),
             input(location,tec,vintage,year,mode,node,commodity,level_storage,time2,time)
-            * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time) );
+            * duration_time_rel(time,time2) * ACT(location,tec,vintage,year,mode,time2) );
 
 ***
 * .. _equation_storage_balance:
