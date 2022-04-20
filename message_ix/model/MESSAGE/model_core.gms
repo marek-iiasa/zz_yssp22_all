@@ -49,6 +49,7 @@
 * :math:`LAND_{n,s,y} \in [0,1]`                           Relative share of land-use scenario (for land-use model emulator)
 * :math:`EMISS_{n,e,\widehat{t},y} \in \mathbb{R}`         Auxiliary variable for aggregate emissions by technology type
 * :math:`REL_{r,n,y} \in \mathbb{R}`                       Auxiliary variable for left-hand side of relations (linear constraints)
+* :math:`REL\_TIME_{r,n,y,h} \in \mathbb{R}`               Auxiliary variable for left-hand side of relations (linear constraints) at each subannual timeslice
 * :math:`COMMODITY\_USE_{n,c,l,y} \in \mathbb{R}`          Auxiliary variable for amount of commodity used at specific level
 * :math:`COMMODITY\_BALANCE_{n,c,l,y,h} \in \mathbb{R}`    Auxiliary variable for right-hand side of :ref:`commodity_balance`
 * :math:`STORAGE_{n,t,l,c,y,h} \in \mathbb{R}`             State of charge or content of storage at each sub-annual timestep
@@ -116,6 +117,8 @@ Variables
     EMISS(node,emission,type_tec,year_all)       aggregate emissions by technology type and land-use model emulator
 * auxiliary variable for left-hand side of relations (linear constraints)
     REL(relation,node,year_all)                  auxiliary variable for left-hand side of user-defined relations
+* time-related auxiliary variable for left-hand side of relations (linear constraints)
+    REL_TIME(relation,node,year_all,time)                  auxiliary variable for left-hand side of user-defined relations
 * change in the content of storage device
     STORAGE_CHARGE(node,tec,level,commodity,year_all,time)    charging of storage in each timestep (negative for discharge)
 ;
@@ -217,6 +220,8 @@ Positive variables
     SLACK_LAND_TYPE_LO(node,year_all,land_type)       slack variable for dynamic land type constraint relaxation (downwards)
     SLACK_RELATION_BOUND_UP(relation,node,year_all)   slack variable for upper bound of generic relation
     SLACK_RELATION_BOUND_LO(relation,node,year_all)   slack variable for lower bound of generic relation
+    SLACK_RELATION_BOUND_UP_TIME(relation,node,year_all,time)   slack variable for upper bound of generic relation with subannual timestep
+    SLACK_RELATION_BOUND_LO_TIME(relation,node,year_all,time)   slack variable for lower bound of generic relation with subannual timestep
 ;
 
 *----------------------------------------------------------------------------------------------------------------------*
@@ -284,6 +289,10 @@ Equations
     STORAGE_BALANCE                 balance of the state of charge of storage
     STORAGE_BALANCE_INIT            balance of the state of charge of storage at sub-annual time steps with initial storage content
     STORAGE_EQUIVALENCE             mapping state of storage as activity of storage technologies
+    RELATION_EQUIVALENCE_TIME       time dependent auxiliary equation to simplify the implementation of relations
+    RELATION_EQUIVALENCE_YEAR       time dependent auxiliary equation to simplify the implementation of relations at year level
+    RELATION_CONSTRAINT_UP_TIME     time dependentupper bound of relations (linear constraints)
+    RELATION_CONSTRAINT_LO_TIME     time dependent lower bound of relations (linear constraints)
 ;
 *----------------------------------------------------------------------------------------------------------------------*
 * equation statements                                                                                                  *
@@ -407,6 +416,10 @@ COST_ACCOUNTING_NODAL(node, year)..
 * cost terms associated with linear relations
     + SUM(relation$( relation_cost(relation,node,year) ),
         relation_cost(relation,node,year) * REL(relation,node,year) )
+* cost terms associated with linear relations on sub-annual timeslice level
+    + SUM((relation,time)$( relation_cost(relation,node,year) AND
+          (map_relation_time(relation,node,year,time) OR map_relation_year(relation,node,year,time) ) ),
+        relation_cost(relation,node,year) * REL_TIME(relation,node,year,time ) )
 * implementation of slack variables for constraints to aid in debugging
     + SUM((commodity,level,time)$( map_commodity(node,commodity,level,year,time) ), ( 0
 %SLACK_COMMODITY_EQUIVALENCE%   + SLACK_COMMODITY_EQUIVALENCE_UP(node,commodity,level,year,time)
@@ -439,6 +452,10 @@ COST_ACCOUNTING_NODAL(node, year)..
     + SUM((relation), 0
 %SLACK_RELATION_BOUND_UP% + 1e6 * SLACK_RELATION_BOUND_UP(relation,node,year)$( is_relation_upper(relation,node,year) )
 %SLACK_RELATION_BOUND_LO% + 1e6 * SLACK_RELATION_BOUND_LO(relation,node,year)$( is_relation_lower(relation,node,year) )
+        )
+    + SUM((relation,time), 0
+%SLACK_RELATION_BOUND_UP_TIME% + 1e6 * SLACK_RELATION_BOUND_UP_TIME(relation,node,year,time)
+%SLACK_RELATION_BOUND_LO_TIME% + 1e6 * SLACK_RELATION_BOUND_LO_TIME(relation,node,year,time)
         )
 ;
 
@@ -2121,6 +2138,91 @@ RELATION_CONSTRAINT_LO(relation,node,year)$( is_relation_lower(relation,node,yea
     REL(relation,node,year)
 %SLACK_RELATION_BOUND_LO% + SLACK_RELATION_BOUND_LO(relation,node,year)
     =G= relation_lower(relation,node,year) ;
+
+* Section of generic relations (linear constraints) with sub-annual timeslices
+* -------------------------------------------------
+*
+* This feature is intended for development and testing only for addressing sub-annual timeslices!
+*
+* Auxiliary variable for left-hand side
+* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*
+* .. _equation_relation_equivalence_time:
+*
+* Equation RELATION_EQUIVALENCE_TIME
+* """""""""""""""""""""""""""""
+*   .. math::
+*      REL\_TIME_{r,n,y,h} = \sum_{t} \Bigg(
+*          & \ relation\_new\_capacity_{r,n,y,t} \cdot CAP\_NEW_{n,t,y} \\[4 pt]
+*          & + relation\_total\_capacity_{r,n,y,t} \cdot \sum_{y^V \leq y} \ CAP_{n,t,y^V,y} \\
+*          & + \sum_{n^L,y',m} \ relation\_activity\_time_{r,n,y,n^L,t,y',m,h} \\
+*          & \quad \quad \cdot \Big( \sum_{y^V \leq y'} ACT_{n^L,t,y^V,y',m,h}
+*                              + historical\_activity_{n^L,t,y',m,h} \Big) \Bigg)
+*
+* The parameter :math:`historical\_new\_capacity_{r,n,y}` is not included here, because relations can only be active
+* in periods included in the model horizon and there is no "writing" of capacity relation factors across periods.
+***
+RELATION_EQUIVALENCE_TIME(relation,node,year,time)$( map_relation_time(relation,node,year,time) )..
+    REL_TIME(relation,node,year,time)
+        =E=
+        SUM(tec,
+        ( relation_new_capacity(relation,node,year,tec) * CAP_NEW(node,tec,year)
+          + relation_total_capacity(relation,node,year,tec)
+            * SUM(vintage$( map_tec_lifetime(node,tec,vintage,year) ), CAP(node,tec,vintage,year) )
+          )$( inv_tec(tec) )
+        + SUM( (location,year_all2,mode)$( map_relation_time(relation,location,year_all2,time) ),
+            relation_activity_time(relation,node,year,location,tec,year_all2,mode,time)
+            * ( SUM(vintage$( map_tec_lifetime(location,tec,vintage,year_all2) ),
+                  ACT(location,tec,vintage,year_all2,mode,time) )
+                  + historical_activity(location,tec,year_all2,mode,time) )
+          )
+      ) ;
+
+* Linear relations of sub-annual timeslice that is accounted at 'year' level
+RELATION_EQUIVALENCE_YEAR(relation,node,year)$( sum (time, map_relation_year(relation,node,year,time) ) )..
+    REL_TIME(relation,node,year,'year')
+        =E=
+        SUM(tec,
+        ( relation_new_capacity(relation,node,year,tec) * CAP_NEW(node,tec,year)
+          + relation_total_capacity(relation,node,year,tec)
+            * SUM(vintage$( map_tec_lifetime(node,tec,vintage,year) ), CAP(node,tec,vintage,year) )
+          )$( inv_tec(tec) )
+        + SUM( (location,year_all2,mode,time) ,
+            relation_activity_time(relation,node,year,location,tec,year_all2,mode,time)
+            * ( SUM(vintage$( map_tec_lifetime(location,tec,vintage,year_all2) ),
+                  ACT(location,tec,vintage,year_all2,mode,time) )
+                  + historical_activity(location,tec,year_all2,mode,time) )
+          )
+      ) ;
+
+***
+* Upper and lower bounds on user-defined relations with sub-annual timeslices
+* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*
+* .. _equation_relation_constraint_up_time:
+*
+* Equation RELATION_CONSTRAINT_UP_TIME
+* """"""""""""""""""""""""""""""""""""
+*   .. math::
+*      REL\_TIME_{r,n,y,h} \leq relation\_upper\_time_{r,n,y,h}
+***
+RELATION_CONSTRAINT_UP_TIME(relation,node,year,time)$( is_relation_upper_time(relation,node,year,time) )..
+    REL_TIME(relation,node,year,time)
+%SLACK_RELATION_BOUND_UP_TIME% - SLACK_RELATION_BOUND_UP_TIME(relation,node,year,time)
+    =L= relation_upper_time(relation,node,year,time) ;
+
+***
+* .. _equation_relation_constraint_lo_time:
+*
+* Equation RELATION_CONSTRAINT_LO_TIME
+* """"""""""""""""""""""""""""""""""""
+*   .. math::
+*      REL\_TIME_{r,n,y,h} \geq relation\_lower\_time_{r,n,y,h}
+***
+RELATION_CONSTRAINT_LO_TIME(relation,node,year,time)$( is_relation_lower_time(relation,node,year,time) )..
+    REL_TIME(relation,node,year,time)
+%SLACK_RELATION_BOUND_LO_TIME% + SLACK_RELATION_BOUND_LO_TIME(relation,node,year,time)
+    =G= relation_lower_time(relation,node,year,time) ;
 
 *----------------------------------------------------------------------------------------------------------------------*
 ***
