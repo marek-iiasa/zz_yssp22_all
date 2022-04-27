@@ -45,7 +45,7 @@ $ONGLOBAL
 *----------------------------------------------------------------------------------------------------------------------*
 
 ** scenario/case selection - this must match the name of the MsgData_<%%%>.gdx input data file **
-$SETGLOBAL data "MESSAGEix-R12_baseline_rtpv_v45"
+$SETGLOBAL data "MESSAGE_CASm__VRE-50%"
 
 ** MACRO mode
 * "none": MESSAGEix is run in stand-alone mode

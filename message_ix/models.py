@@ -133,7 +133,7 @@ MESSAGE_ITEMS = {
     # Mapping of storage reservoir to charger/discharger
     "map_tec_storage": dict(
         ix_type="set",
-        idx_sets=["node", "technology", "mode", "technology",
+        idx_sets=["node", "technology", "mode", "storage_tec",
                   "mode", "level", "commodity", "lvl_temporal"],
         idx_names=["node", "technology", "mode", "storage_tec",
                    "storage_mode", "level", "commodity", "lvl_temporal"]
