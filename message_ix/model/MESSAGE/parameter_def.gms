@@ -571,6 +571,8 @@ Parameters
 *      - ``node`` | ``tec`` | ``year``
 *    * - beyond_horizon_factor
 *      - ``node`` | ``tec`` | ``year``
+*    * - bound_investment_up
+*      - ``node`` | ``year``
 *
 *
 ***
@@ -581,6 +583,7 @@ Parameters
     end_of_horizon_factor(node,tec,year_all)    multiplier for value of investment at end of model horizon
     beyond_horizon_lifetime(node,tec,year_all)  remaining technical lifetime at the end of model horizon
     beyond_horizon_factor(node,tec,year_all)    discount factor of remaining lifetime beyond model horizon
+    bound_investment_up(node, year_all)   upper bound on investment per node and year
 ;
 
 *----------------------------------------------------------------------------------------------------------------------*
