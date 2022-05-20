@@ -613,7 +613,7 @@ $macro COMMODITY_BALANCE(node,commodity,level,year,time) (                      
           - land_input(node,land_scenario,year,commodity,level,time) ) * LAND(node,land_scenario,year) )               \
 * final demand (exogenous parameter to be satisfied by the commodity system)
     - demand_fixed(node,commodity,level,year,time)                                                                     \
-    )$( map_commodity(node,commodity,level,year,time) AND NOT level_resource(level) AND NOT level_renewable(level) )
+    )$( map_commodity(node,commodity,level,year,time) AND NOT level_resource(level) AND NOT level_renewable(level) AND NOT level_storage(level) )
 
 ***
 * .. _commodity_balance_gt:
@@ -2227,16 +2227,16 @@ STORAGE_CHANGE(node,storage_tec,mode,level_storage,commodity,year,time)$sum(
         SUM( (location,vintage,tec,mode2,time2,time3,lvl_temporal)$(
         map_tec_lifetime(node,tec,vintage,year)
         AND map_temporal_hierarchy(lvl_temporal,time,time3)$map_tec_storage(node,tec,mode2,storage_tec,mode,level_storage,commodity,lvl_temporal) ),
-            output(location,tec,vintage,year,mode2,node,commodity,level_storage,time2,time)
+            output(location,tec,vintage,year,mode2,node,commodity,level_storage,time,time2)
 *            * duration_time_rel(time,time2)
-            * ACT(location,tec,vintage,year,mode2,time2) )
+            * ACT(location,tec,vintage,year,mode2,time) )
 * decrease in the content of storage due to the activity of discharging technologies
         - SUM( (location,vintage,tec,mode2,time2,time3,lvl_temporal)$(
         map_tec_lifetime(node,tec,vintage,year)
         AND map_temporal_hierarchy(lvl_temporal,time,time3)$map_tec_storage(node,tec,mode2,storage_tec,mode,level_storage,commodity,lvl_temporal) ),
-            input(location,tec,vintage,year,mode2,node,commodity,level_storage,time2,time)
+            input(location,tec,vintage,year,mode2,node,commodity,level_storage,time,time2)
 *            * duration_time_rel(time,time2)
-            * ACT(location,tec,vintage,year,mode2,time2) );
+            * ACT(location,tec,vintage,year,mode2,time) );
 
 ***
 * .. _equation_storage_balance:
